@@ -176,29 +176,20 @@ async function main() {
     console.log(`${g.id}: ${list.length} in NSR, ${kept} recorded in NL`);
   }
 
-  // Dutch names for orders and families, from the NSR checklist
+  // Dutch names for orders and families (the NSR export only names species)
   const higherNames = {};
-  for (const g of GROUPS) {
-    for (const key of g.nsrKeys) {
-      for (const rank of ['ORDER', 'FAMILY']) {
-        for (let offset = 0; ; offset += 1000) {
-          const r = await get(`${GBIF}/species/search?${qs([
-            ['datasetKey', NSR], ['higherTaxonKey', key], ['rank', rank], ['limit', 1000], ['offset', offset],
-          ])}`);
-          for (const t of r.results) {
-            const v = nld(t);
-            if (v && t.canonicalName) higherNames[t.canonicalName] = cap(v);
-          }
-          if (r.endOfRecords || !r.results.length) break;
-        }
-      }
-      // the group taxon itself can be an order or family (e.g. Formicidae)
-      const self = await get(`${GBIF}/species/${key}/vernacularNames?limit=50`).catch(() => null);
-      const own = await get(`${GBIF}/species/${key}`);
-      const v = self?.results?.find((x) => x.language === 'nld')?.vernacularName;
-      if (v) higherNames[own.canonicalName] = cap(v);
-    }
-  }
+  const higher = [...new Set(species.flatMap((s) => [s.o && `ORDER|${s.o}`, s.f && `FAMILY|${s.f}`]).filter(Boolean))];
+  await pool(higher, 8, async (h) => {
+    const [rank, name] = h.split('|');
+    try {
+      const m = await get(`${GBIF}/species/match?${qs([['name', name], ['rank', rank]])}`);
+      if (!m.usageKey || m.canonicalName !== name) return;
+      const r = await get(`${GBIF}/species/${m.usageKey}/vernacularNames?limit=200`);
+      const nl = r.results.filter((x) => x.language === 'nld' || x.language === 'nl');
+      const v = nl.find((x) => /soortenregister|nsr/i.test(x.source ?? '')) ?? nl[0];
+      if (v) higherNames[name] = cap(v.vernacularName);
+    } catch (e) { console.warn(e.message); }
+  });
   console.log(`Dutch names for ${Object.keys(higherNames).length} orders/families`);
 
   // Hotspot grid: which species were recorded (recently) in each cell
