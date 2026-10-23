@@ -3,7 +3,7 @@ import exifr from 'exifr';
 // Reads time and GPS position from a photo's EXIF metadata (null when absent).
 export async function readPhotoMeta(file) {
   try {
-    const x = await exifr.parse(file, { gps: true, pick: ['DateTimeOriginal', 'CreateDate', 'latitude', 'longitude'] });
+    const x = await exifr.parse(file, { tiff: true, exif: true, gps: true, xmp: false, icc: false, iptc: false });
     if (!x) return { time: null, lat: null, lon: null };
     const time = x.DateTimeOriginal ?? x.CreateDate ?? null;
     const ok = Number.isFinite(x.latitude) && Number.isFinite(x.longitude);

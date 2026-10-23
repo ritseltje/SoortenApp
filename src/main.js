@@ -250,7 +250,7 @@ function drawTree() {
     out.innerHTML = hits.length
       ? `<ul class="list">${hits.map((s) => speciesRow(s, `<span class="path">${esc(hn[s.f] ?? s.f ?? '')}</span>`)).join('')}</ul>`
       : '<p class="empty">Geen soorten gevonden.</p>';
-    bindRows(out.querySelector('.list') ?? out);
+    bindRows(out);
     return;
   }
   // order > family > genus > species
