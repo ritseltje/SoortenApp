@@ -16,9 +16,163 @@ spinnen: Araneae nsr=252814913 nub=1496
 paddenstoelen: Agaricomycetes nsr=252823495 nub=186
 paddenstoelen: Dacrymycetes nsr=252823421 nub=273
 paddenstoelen: Pezizomycetes nsr=252826843 nub=316
-wantsen: Heteroptera nsr=undefined nub=809
-wantsen: Auchenorrhyncha nsr=undefined nub=809
-Error: Could not resolve wantsen
-    at resolveTaxa (file:///home/runner/work/SoortenApp/SoortenApp/scripts/build-data.mjs:119:61)
-    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
-    at async main (file:///home/runner/work/SoortenApp/SoortenApp/scripts/build-data.mjs:169:27)
+wantsen: Acanthosomatidae nsr=252817928 nub=4303
+wantsen: Alydidae nsr=252817926 nub=7875
+wantsen: Aneuridae nsr=undefined nub=4783573
+wantsen: Anthocoridae nsr=252816146 nub=7876
+wantsen: Aphelocheiridae nsr=252815660 nub=3265575
+wantsen: Aradidae nsr=252817915 nub=7877
+wantsen: Artheneidae nsr=undefined nub=7878
+wantsen: Berytidae nsr=252815681 nub=4306
+wantsen: Blissidae nsr=undefined nub=7879
+wantsen: Ceratocombidae nsr=252817923 nub=4307
+wantsen: Cimicidae nsr=252817898 nub=9648
+wantsen: Coreidae nsr=252817234 nub=9649
+wantsen: Corixidae nsr=252815748 nub=6988
+wantsen: Cydnidae nsr=252817729 nub=6989
+wantsen: Cymidae nsr=undefined nub=4308
+wantsen: Dipsocoridae nsr=252817830 nub=4309
+wantsen: Geocoridae nsr=undefined nub=4311
+wantsen: Gerridae nsr=252817885 nub=7881
+wantsen: Hebridae nsr=252815678 nub=4312
+wantsen: Heterogastridae nsr=undefined nub=7883
+wantsen: Hydrometridae nsr=252815739 nub=7884
+wantsen: Leptopodidae nsr=undefined nub=7887
+wantsen: Lyctocoridae nsr=undefined nub=5866519
+wantsen: Lygaeidae nsr=252815993 nub=7888
+wantsen: Mesoveliidae nsr=252817895 nub=4318
+wantsen: Micronectidae nsr=252815665 nub=4777847
+wantsen: Microphysidae nsr=252815709 nub=7890
+wantsen: Miridae nsr=252815797 nub=4319
+wantsen: Nabidae nsr=252815718 nub=7891
+wantsen: Naucoridae nsr=252815731 nub=4320
+wantsen: Nepidae nsr=252815662 nub=7892
+wantsen: Notonectidae nsr=252815741 nub=4322
+wantsen: Oxycarenidae nsr=undefined nub=4323
+wantsen: Pentatomidae nsr=252816077 nub=9650
+wantsen: Piesmatidae nsr=252817905 nub=9651
+wantsen: Plataspidae nsr=undefined nub=9652
+wantsen: Pleidae nsr=252815653 nub=9653
+wantsen: Pyrrhocoridae nsr=252815657 nub=7895
+wantsen: Reduviidae nsr=252817760 nub=4324
+wantsen: Rhopalidae nsr=252815689 nub=4325
+wantsen: Rhyparochromidae nsr=undefined nub=4326
+wantsen: Saldidae nsr=252815667 nub=7896
+wantsen: Scutelleridae nsr=252817936 nub=4327
+wantsen: Stenocephalidae nsr=252817911 nub=4328
+wantsen: Thyreocoridae nsr=252815727 nub=7898
+wantsen: Tingidae nsr=252816201 nub=7899
+wantsen: Veliidae nsr=252817878 nub=7900
+wantsen: Achilidae nsr=undefined nub=3312
+wantsen: Aphrophoridae nsr=252817784 nub=3764
+wantsen: Caliscelidae nsr=252817824 nub=4214
+wantsen: Cercopidae nsr=252817602 nub=3763
+wantsen: Cicadellidae nsr=252816289 nub=9647
+wantsen: Cicadidae nsr=252815648 nub=6049
+wantsen: Cixiidae nsr=252817808 nub=8470
+wantsen: Delphacidae nsr=252817395 nub=8498
+wantsen: Dictyopharidae nsr=undefined nub=8499
+wantsen: Flatidae nsr=undefined nub=8502
+wantsen: Issidae nsr=252817619 nub=4494
+wantsen: Meenoplidae nsr=undefined nub=4495
+wantsen: Membracidae nsr=252817802 nub=7889
+wantsen: Tettigometridae nsr=252817795 nub=5946
+wantsen: Tropiduchidae nsr=undefined nub=2232
+sprinkhanen: Orthoptera nsr=252820998 nub=1458
+dagvlinders: Hesperiidae nsr=252822163 nub=6953
+dagvlinders: Papilionidae nsr=252822144 nub=9417
+dagvlinders: Pieridae nsr=252822546 nub=5481
+dagvlinders: Lycaenidae nsr=252822112 nub=5473
+dagvlinders: Riodinidae nsr=252820914 nub=1933999
+dagvlinders: Nymphalidae nsr=252822229 nub=7017
+nachtvlinders: Hepialidae nsr=252822595 nub=3556
+nachtvlinders: Cossidae nsr=252822590 nub=8840
+nachtvlinders: Zygaenidae nsr=252822622 nub=8875
+nachtvlinders: Limacodidae nsr=252820927 nub=5474
+nachtvlinders: Sesiidae nsr=252822133 nub=5340
+nachtvlinders: Lasiocampidae nsr=252820936 nub=3530
+nachtvlinders: Endromidae nsr=252821056 nub=3563
+nachtvlinders: Saturniidae nsr=252821999 nub=8864
+nachtvlinders: Sphingidae nsr=252822148 nub=8868
+nachtvlinders: Drepanidae nsr=252821022 nub=7294
+nachtvlinders: Geometridae nsr=252821308 nub=6950
+nachtvlinders: Notodontidae nsr=252820958 nub=7016
+nachtvlinders: Erebidae nsr=252821185 nub=4532185
+nachtvlinders: Nolidae nsr=252822559 nub=9717
+nachtvlinders: Noctuidae nsr=252822274 nub=7015
+nachtvlinders: Euteliidae nsr=undefined nub=4534947
+nachtvlinders: Thyatiridae nsr=undefined nub=3256932
+nachtvlinders: Lymantriidae nsr=undefined nub=5472
+nachtvlinders: Arctiidae nsr=undefined nub=4548
+slakken: Gastropoda nsr=252811616 nub=225
+libellen: Odonata nsr=252815530 nub=789
+hooiwagens: Opiliones nsr=252813470 nub=907
+zweefvliegen: Syrphidae nsr=252818776 nub=6920
+vogels: 651 in NSR, 614 recorded in NL
+atlas vaatplanten: 6315 codes
+  100/965
+  200/965
+  300/965
+  400/965
+  500/965
+  600/965
+  700/965
+  800/965
+  900/965
+planten: 5107 in NSR, 4467 recorded in NL
+atlas reptielen: 38 codes
+reptielen: 27 in NSR, 24 recorded in NL
+atlas amfibieen: 37 codes
+amfibieen: 27 in NSR, 24 recorded in NL
+atlas zoogdieren: 127 codes
+zoogdieren: 126 in NSR, 121 recorded in NL
+bijen: 408 in NSR, 377 recorded in NL
+  100/621
+  200/621
+  300/621
+  400/621
+  500/621
+  600/621
+kevers: 4630 in NSR, 4233 recorded in NL
+mieren: 209 in NSR, 120 recorded in NL
+spinnen: 704 in NSR, 633 recorded in NL
+  100/1283
+  200/1283
+  300/1283
+  400/1283
+  500/1283
+  600/1283
+  700/1283
+  800/1283
+  900/1283
+  1000/1283
+  1100/1283
+  1200/1283
+paddenstoelen: 3858 in NSR, 3233 recorded in NL
+wantsen: 1164 in NSR, 1105 recorded in NL
+sprinkhanen: 72 in NSR, 64 recorded in NL
+dagvlinders: 118 in NSR, 100 recorded in NL
+nachtvlinders: 888 in NSR, 840 recorded in NL
+slakken: 394 in NSR, 368 recorded in NL
+libellen: 72 in NSR, 70 recorded in NL
+hooiwagens: 37 in NSR, 31 recorded in NL
+zweefvliegen: 364 in NSR, 337 recorded in NL
+  100/916
+  200/916
+  300/916
+  400/916
+  500/916
+  600/916
+  700/916
+  800/916
+  900/916
+Dutch names for 579 orders/families
+grid: 728 cells
+  100/728
+  200/728
+  300/728
+  400/728
+  500/728
+  600/728
+  700/728
+done: 16761 species, 601 grid cells
