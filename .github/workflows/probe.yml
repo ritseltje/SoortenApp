@@ -1,0 +1,24 @@
+name: probe
+on:
+  push:
+    branches: [claude/soorten-app]
+    paths: [.github/workflows/probe.yml]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: probe
+        run: |
+          set -x
+          UA="Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36"
+          curl -s "https://api.gbif.org/v1/species/match?name=Parus%20major" | head -c 1500; echo
+          curl -s "https://api.gbif.org/v1/dataset/search?q=Nederlands%20Soortenregister&limit=5" | jq '.results[] | {key,title,type}'
+          curl -s "https://api.gbif.org/v1/dataset/search?q=Dutch%20Species%20Register&limit=5" | jq '.results[] | {key,title,type}'
+          curl -s "https://api.gbif.org/v1/species/9705453/vernacularNames?limit=50" | jq -c '.results[] | {vernacularName,language,source}' | head -30
+          curl -s "https://api.gbif.org/v1/occurrence/search?country=NL&taxonKey=212&limit=0&facet=speciesKey&facetLimit=5" | jq -c .facets
+          for u in "https://waarneming.nl/species/search/?q=Parus+major" "https://waarneming.nl/species/search/?q=Koolmees" "https://www.verspreidingsatlas.nl/" "https://www.verspreidingsatlas.nl/zoeken?q=Parus+major" "https://www.nederlandsesoorten.nl/linnaeus_ng/app/views/search/nsr_search.php?search=Parus+major"; do
+            echo "=================== $u"
+            curl -sL -A "$UA" -o page.html -w "%{http_code} %{url_effective}\n" -m 30 "$u"
+            grep -oiE 'href="[^"]*(species|soort|taxon|/[0-9]{3,})[^"]*"' page.html | sort -u | head -40
+            head -c 1500 page.html; echo
+          done
