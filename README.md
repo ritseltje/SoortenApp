@@ -1,7 +1,9 @@
 # SoortenApp
 
 Telefoon-app (PWA) om soorten in Nederland te zoeken, te vinden en te loggen:
-vogels, (vaat)planten, reptielen, amfibieën, zoogdieren, bijen, kevers, mieren, spinnen en paddenstoelen.
+vogels, (vaat)planten, reptielen, amfibieën, zoogdieren, bijen, kevers, mieren, spinnen, paddenstoelen,
+wantsen en cicaden, sprinkhanen en krekels, dag- en nachtvlinders (macro's), slakken, libellen en juffers,
+hooiwagens en zweefvliegen.
 
 - **Te zoeken**: algemene soorten die je nog niet hebt gelogd, gesorteerd op aantal waarnemingen in NL (laatste 15 jaar).
 - **Kaart**: hokken van ±10×10 km gekleurd naar het aantal nog niet gelogde soorten; tik op een hok voor de soortenlijst.

@@ -12,6 +12,8 @@ const THIS_YEAR = new Date().getFullYear();
 const RECENT = `${THIS_YEAR - 15},${THIS_YEAR}`; // years used for "common" and hotspots
 
 // id: short code used in the app; taxa: names of higher taxa that make up the group.
+// A third taxa element names a broader taxon to count occurrences under, for taxa the
+// GBIF backbone lacks (suborders); only species in the NSR group list are kept.
 const GROUPS = [
   { id: 'vogels', name: 'Vogels', taxa: [['Aves', 'CLASS']] },
   { id: 'planten', name: 'Planten', taxa: [['Tracheophyta', 'PHYLUM']] },
@@ -29,6 +31,28 @@ const GROUPS = [
     id: 'paddenstoelen', name: 'Paddenstoelen',
     taxa: ['Agaricomycetes', 'Dacrymycetes', 'Pezizomycetes'].map((c) => [c, 'CLASS']),
   },
+  {
+    id: 'wantsen', name: 'Wantsen en cicaden',
+    taxa: [['Heteroptera', 'SUBORDER', 'Hemiptera'], ['Auchenorrhyncha', 'SUBORDER', 'Hemiptera']],
+  },
+  { id: 'sprinkhanen', name: 'Sprinkhanen en krekels', taxa: [['Orthoptera', 'ORDER']] },
+  {
+    id: 'dagvlinders', name: 'Dagvlinders',
+    taxa: ['Hesperiidae', 'Papilionidae', 'Pieridae', 'Lycaenidae', 'Riodinidae', 'Nymphalidae'].map((f) => [f, 'FAMILY']),
+  },
+  {
+    // macro-nachtvlinders in the traditional Dutch sense; older family names cover NSR's own classification
+    id: 'nachtvlinders', name: 'Nachtvlinders (macro\'s)',
+    taxa: [
+      'Hepialidae', 'Cossidae', 'Zygaenidae', 'Limacodidae', 'Sesiidae', 'Lasiocampidae', 'Endromidae',
+      'Saturniidae', 'Sphingidae', 'Drepanidae', 'Geometridae', 'Notodontidae', 'Erebidae', 'Nolidae',
+      'Noctuidae', 'Euteliidae', 'Thyatiridae', 'Lymantriidae', 'Arctiidae',
+    ].map((f) => [f, 'FAMILY']),
+  },
+  { id: 'slakken', name: 'Slakken', taxa: [['Gastropoda', 'CLASS']] },
+  { id: 'libellen', name: 'Libellen en juffers', taxa: [['Odonata', 'ORDER']] },
+  { id: 'hooiwagens', name: 'Hooiwagens', taxa: [['Opiliones', 'ORDER']] },
+  { id: 'zweefvliegen', name: 'Zweefvliegen', taxa: [['Syrphidae', 'FAMILY']] },
 ];
 
 // verspreidingsatlas.nl only has species pages for these groups
@@ -76,7 +100,7 @@ const qs = (params) => new URLSearchParams(params.flatMap(([k, v]) => [].concat(
 async function resolveTaxa(group) {
   group.nsrKeys = [];
   group.nubKeys = [];
-  for (const [name, rank] of group.taxa) {
+  for (const [name, rank, countUnder] of group.taxa) {
     const r = await get(`${GBIF}/species/search?${qs([['datasetKey', NSR], ['q', name], ['rank', rank], ['limit', 20]])}`);
     const hit = r.results.find((t) => t.canonicalName === name && t.taxonomicStatus === 'ACCEPTED');
     if (hit) group.nsrKeys.push(hit.key);
@@ -84,6 +108,10 @@ async function resolveTaxa(group) {
     if (!nub) {
       const m = await get(`${GBIF}/species/match?${qs([['name', name], ['rank', rank]])}`);
       if (m.matchType !== 'NONE' && m.canonicalName === name) nub = m.usageKey;
+    }
+    if (!nub && countUnder) {
+      const m = await get(`${GBIF}/species/match?${qs([['name', countUnder]])}`);
+      if (m.matchType !== 'NONE' && m.canonicalName === countUnder) nub = m.usageKey;
     }
     if (nub) group.nubKeys.push(nub);
     console.log(`${group.id}: ${name} nsr=${hit?.key} nub=${nub}`);
