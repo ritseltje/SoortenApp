@@ -52,6 +52,7 @@ async function start() {
   renderChips();
   document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
   $('#quick-log').addEventListener('click', () => openLog({}));
+  setupInstall();
   showTab(state.tab);
   if ('serviceWorker' in navigator && import.meta.env.PROD) navigator.serviceWorker.register('sw.js');
 }
@@ -586,6 +587,47 @@ function openLog({ species }) {
       toast(`${displayName(s)} gelogd${log.lat == null ? ' (zonder locatie)' : ''}`);
       rerender();
     }
+  });
+}
+
+// Install button: Android/desktop Chrome get the native prompt, iOS gets instructions
+// (Safari has no install prompt; it only offers "Zet op beginscherm" in the share menu).
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  installPrompt = e;
+  $('#install').hidden = false;
+});
+window.addEventListener('appinstalled', () => { $('#install').hidden = true; });
+
+function setupInstall() {
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const btn = $('#install');
+  if (standalone) return;
+  btn.hidden = false;
+  btn.addEventListener('click', async () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      if (outcome === 'accepted') btn.hidden = true;
+      installPrompt = null;
+      return;
+    }
+    const safari = ios && !/crios|fxios|edgios/i.test(navigator.userAgent);
+    openSheet(`
+      <header><h2>App installeren</h2><button class="close" aria-label="Sluiten">✕</button></header>
+      ${ios ? `<ol class="steps">
+        ${safari ? '' : '<li>Werkt het niet? Open deze pagina in <b>Safari</b>.</li>'}
+        <li>Tik op de <b>Deel</b>-knop <span aria-hidden="true">⬆️</span> (onderaan of naast de adresbalk).</li>
+        <li>Scroll omlaag en kies <b>Zet op beginscherm</b>.</li>
+        <li>Tik op <b>Voeg toe</b>. De app staat nu tussen je andere apps.</li>
+      </ol>` : `<ol class="steps">
+        <li>Open deze pagina in <b>Chrome</b>.</li>
+        <li>Tik rechtsboven op het menu <b>⋮</b>.</li>
+        <li>Kies <b>App installeren</b> of <b>Toevoegen aan startscherm</b>.</li>
+      </ol>`}
+      <p class="hint">Na installeren werkt de app ook offline.</p>`);
   });
 }
 
