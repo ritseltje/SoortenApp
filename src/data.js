@@ -3,6 +3,8 @@
 export const GROUP_ICONS = {
   vogels: '🐦', planten: '🌿', reptielen: '🦎', amfibieen: '🐸', zoogdieren: '🦔',
   bijen: '🐝', kevers: '🪲', mieren: '🐜', spinnen: '🕷️', paddenstoelen: '🍄',
+  wantsen: '🛡️', sprinkhanen: '🦗', dagvlinders: '🦋', nachtvlinders: '🌙', slakken: '🐌',
+  libellen: '🪽', hooiwagens: '🦵', zweefvliegen: '🪰',
 };
 
 export const norm = (s) => (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
