@@ -13,6 +13,9 @@ bijen: Melittidae nsr=252819687 nub=4345
 kevers: Coleoptera nsr=252816824 nub=1470
 mieren: Formicidae nsr=252818766 nub=4342
 spinnen: Araneae nsr=252814913 nub=1496
+paddenstoelen: Agaricomycetes nsr=252823495 nub=186
+paddenstoelen: Dacrymycetes nsr=252823421 nub=273
+paddenstoelen: Pezizomycetes nsr=252826843 nub=316
 vogels: 651 in NSR, 614 recorded in NL
 atlas vaatplanten: 6315 codes
   100/965
@@ -41,12 +44,26 @@ bijen: 408 in NSR, 377 recorded in NL
 kevers: 4630 in NSR, 4233 recorded in NL
 mieren: 209 in NSR, 120 recorded in NL
 spinnen: 704 in NSR, 633 recorded in NL
-  100/565
-  200/565
-  300/565
-  400/565
-  500/565
-Dutch names for 410 orders/families
+  100/1283
+  200/1283
+  300/1283
+  400/1283
+  500/1283
+  600/1283
+  700/1283
+  800/1283
+  900/1283
+  1000/1283
+  1100/1283
+  1200/1283
+paddenstoelen: 3858 in NSR, 3233 recorded in NL
+  100/697
+  200/697
+  300/697
+  400/697
+  500/697
+  600/697
+Dutch names for 412 orders/families
 grid: 728 cells
   100/728
   200/728
@@ -55,4 +72,4 @@ grid: 728 cells
   500/728
   600/728
   700/728
-done: 10613 species, 597 grid cells
+done: 13846 species, 600 grid cells
