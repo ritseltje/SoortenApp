@@ -73,9 +73,13 @@ async function resolveTaxa(group) {
     const r = await get(`${GBIF}/species/search?${qs([['datasetKey', NSR], ['q', name], ['rank', rank], ['limit', 20]])}`);
     const hit = r.results.find((t) => t.canonicalName === name && t.taxonomicStatus === 'ACCEPTED');
     if (hit) group.nsrKeys.push(hit.key);
-    const m = await get(`${GBIF}/species/match?${qs([['name', name], ['rank', rank], ['strict', 'true']])}`);
-    if (m.usageKey && m.matchType !== 'NONE') group.nubKeys.push(m.usageKey);
-    console.log(`${group.id}: ${name} nsr=${hit?.key} nub=${m.usageKey}`);
+    let nub = hit?.nubKey;
+    if (!nub) {
+      const m = await get(`${GBIF}/species/match?${qs([['name', name], ['rank', rank]])}`);
+      if (m.matchType !== 'NONE' && m.canonicalName === name) nub = m.usageKey;
+    }
+    if (nub) group.nubKeys.push(nub);
+    console.log(`${group.id}: ${name} nsr=${hit?.key} nub=${nub}`);
   }
   if (!group.nsrKeys.length || !group.nubKeys.length) throw new Error(`Could not resolve ${group.id}`);
 }

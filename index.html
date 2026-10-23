@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2e7d32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Soorten">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>SoortenApp</title>
+</head>
+<body>
+  <header id="top">
+    <h1>SoortenApp</h1>
+    <nav id="chips"></nav>
+  </header>
+  <main id="main"><p class="empty">Laden…</p></main>
+  <button id="quick-log" aria-label="Waarneming loggen">＋</button>
+  <nav id="tabs">
+    <button data-tab="common"><span>⭐</span>Te zoeken</button>
+    <button data-tab="map"><span>🗺️</span>Kaart</button>
+    <button data-tab="tree"><span>🔎</span>Soorten</button>
+    <button data-tab="mine"><span>📒</span>Mijn lijst</button>
+  </nav>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
