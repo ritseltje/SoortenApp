@@ -1,0 +1,58 @@
+vogels: Aves nsr=252810283 nub=212
+planten: Tracheophyta nsr=252824031 nub=7707728
+reptielen: Squamata nsr=252810094 nub=11592253
+reptielen: Testudines nsr=252810118 nub=11418114
+amfibieen: Amphibia nsr=252810057 nub=131
+zoogdieren: Mammalia nsr=252811678 nub=359
+bijen: Apidae nsr=252819195 nub=4334
+bijen: Andrenidae nsr=252820439 nub=7901
+bijen: Halictidae nsr=252819322 nub=7908
+bijen: Colletidae nsr=252819407 nub=7905
+bijen: Megachilidae nsr=252820778 nub=7911
+bijen: Melittidae nsr=252819687 nub=4345
+kevers: Coleoptera nsr=252816824 nub=1470
+mieren: Formicidae nsr=252818766 nub=4342
+spinnen: Araneae nsr=252814913 nub=1496
+vogels: 651 in NSR, 614 recorded in NL
+atlas vaatplanten: 6315 codes
+  100/965
+  200/965
+  300/965
+  400/965
+  500/965
+  600/965
+  700/965
+  800/965
+  900/965
+planten: 5107 in NSR, 4467 recorded in NL
+atlas reptielen: 38 codes
+reptielen: 27 in NSR, 24 recorded in NL
+atlas amfibieen: 37 codes
+amfibieen: 27 in NSR, 24 recorded in NL
+atlas zoogdieren: 127 codes
+zoogdieren: 126 in NSR, 121 recorded in NL
+bijen: 408 in NSR, 377 recorded in NL
+  100/621
+  200/621
+  300/621
+  400/621
+  500/621
+  600/621
+kevers: 4630 in NSR, 4233 recorded in NL
+mieren: 209 in NSR, 120 recorded in NL
+spinnen: 704 in NSR, 633 recorded in NL
+  100/565
+  200/565
+  300/565
+  400/565
+  500/565
+Dutch names for 410 orders/families
+grid: 728 cells
+  100/728
+  200/728
+  300/728
+  400/728
+  500/728
+  600/728
+  700/728
+done: 10613 species, 597 grid cells
