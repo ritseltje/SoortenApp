@@ -190,7 +190,7 @@ async function main() {
       const r = await get(`${GBIF}/species/${m.usageKey}/vernacularNames?limit=200`);
       const nl = r.results.filter((x) => x.language === 'nld' || x.language === 'nl');
       const v = nl.find((x) => /soortenregister|nsr/i.test(x.source ?? '')) ?? nl[0];
-      if (v) higherNames[name] = cap(v.vernacularName);
+      if (v) higherNames[name] = cap(v.vernacularName.split(',')[0].trim());
     } catch (e) { console.warn(e.message); }
   });
   console.log(`Dutch names for ${Object.keys(higherNames).length} orders/families`);
