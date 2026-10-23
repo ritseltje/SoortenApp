@@ -16,12 +16,14 @@ jobs:
           UA="Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36"
           UA="Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36"
           V=https://www.verspreidingsatlas.nl
-          curl -sL -A "$UA" "$V/" | grep -oiE '<a class="rsmLink" href="[^"]*">[^<]*' | sort -u
-          for g in reptielen vaatplanten zoogdieren vogels bijen kevers mieren spinnen; do
-            echo "== $g"; curl -sL -A "$UA" "$V/soortenlijst/$g" -o g.html -w "%{http_code} %{url_effective} %{size_download}\n"
-            grep -oiE '<a [^>]*href="[^"]*"[^>]*>[^<]{2,60}</a>' g.html | grep -viE 'rsmLink|login|privacy' | head -12
-          done
-          curl -sL -A "$UA" "$V/mobiel/soortenlijst.aspx?soortgroep=R" -o m.html; grep -oiE '<a [^>]*href="[^"]*"[^>]*>[^<]{2,60}</a>' m.html | head -12; grep -oiE "(href|onclick)=\"[^\"]*\"" m.html | sort -u | head -30
+          curl -sL -A "$UA" "$V/soortenlijst/reptielen" -o g.html
+          python3 - <<'PY'
+          import re
+          h=open('g.html',encoding='utf-8',errors='replace').read()
+          i=h.find('HNSgridview'); rows=re.findall(r'<tr.*?</tr>',h[i:],re.S)
+          for r in rows[:4]: print(r[:1500]); print('-----')
+          PY
+          for u in "$V/9705453" "$V/1" "$V/0"; do curl -sL -A "$UA" -o x.html "$u"; echo "$u"; grep -oE '<(title|h1|h2)[^>]*>[^<]*' x.html | head -5; done
       - name: publish output
         if: always()
         run: |
