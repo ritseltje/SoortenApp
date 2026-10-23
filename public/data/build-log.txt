@@ -41,12 +41,7 @@ bijen: 408 in NSR, 377 recorded in NL
 kevers: 4630 in NSR, 4233 recorded in NL
 mieren: 209 in NSR, 120 recorded in NL
 spinnen: 704 in NSR, 633 recorded in NL
-higher taxa: 565
-  100/565
-  200/565
-  300/565
-  400/565
-  500/565
+Dutch names for 0 orders/families
 grid: 728 cells
   100/728
   200/728
