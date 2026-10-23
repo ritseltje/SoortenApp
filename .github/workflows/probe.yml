@@ -14,17 +14,14 @@ jobs:
         run: |
           exec > probe-out.txt 2>&1
           UA="Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36"
-          D=4dd32523-a3a3-43b7-84df-4cda02f15cf7
-          for q in "Carebara%20diversa" "Formica%20rufa" "Lasius%20niger"; do
-            k=$(curl -s "https://api.gbif.org/v1/species/search?datasetKey=$D&q=$q&limit=1" | jq -r '.results[0].key')
-            echo "== $q $k"; curl -s "https://api.gbif.org/v1/species/$k/distributions" | jq -c '.results'
-            curl -s "https://api.gbif.org/v1/species/$k" | jq -c '{taxonID, references, remarks, extinct, nubKey}'
-          done
           UA="Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36"
           V=https://www.verspreidingsatlas.nl
-          curl -sL -A "$UA" "$V/9705453" -o x.html; sed -e 's/<[^>]*>/ /g' x.html | tr -s ' \n' | head -c 800; echo
-          for g in reptielen amfibieen planten; do echo "== $g"; curl -sL -A "$UA" "$V/$g" -o g.html; grep -oiE 'href="[^"]*"' g.html | grep -viE 'css|axd|projecten|waarnemingen/|biodiversiteit|determinatie|dashboard' | sort -u | head -50; grep -oiE '<a[^>]*>[^<]{3,40}</a>' g.html | head -20; done
-          for u in "$V/AHCYFAYTGMU" "$V/0AHCYFAYTGMU" "$V/soortenzoeker.aspx?q=koolmees" ; do curl -sL -A "$UA" -o x.html -w "$u -> %{http_code} %{url_effective}\n" "$u"; grep -o '<title>[^<]*<' x.html | tr -d '\n'; sed -e 's/<[^>]*>/ /g' x.html | tr -s ' \n' | head -c 300; echo; done
+          curl -sL -A "$UA" "$V/" | grep -oiE '<a class="rsmLink" href="[^"]*">[^<]*' | sort -u
+          for g in reptielen vaatplanten zoogdieren vogels bijen kevers mieren spinnen; do
+            echo "== $g"; curl -sL -A "$UA" "$V/soortenlijst/$g" -o g.html -w "%{http_code} %{url_effective} %{size_download}\n"
+            grep -oiE '<a [^>]*href="[^"]*"[^>]*>[^<]{2,60}</a>' g.html | grep -viE 'rsmLink|login|privacy' | head -12
+          done
+          curl -sL -A "$UA" "$V/mobiel/soortenlijst.aspx?soortgroep=R" -o m.html; grep -oiE '<a [^>]*href="[^"]*"[^>]*>[^<]{2,60}</a>' m.html | head -12; grep -oiE "(href|onclick)=\"[^\"]*\"" m.html | sort -u | head -30
       - name: publish output
         if: always()
         run: |
