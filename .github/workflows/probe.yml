@@ -15,18 +15,16 @@ jobs:
           exec > probe-out.txt 2>&1
           UA="Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36"
           D=4dd32523-a3a3-43b7-84df-4cda02f15cf7
-          curl -s "https://api.gbif.org/v1/species/search?datasetKey=$D&q=Parus%20major&limit=2" | jq '.results[0]'
-          curl -s "https://api.gbif.org/v1/species/search?datasetKey=$D&q=Bombus%20terrestris&limit=1" | jq -c '.results[0] | {key,nubKey,taxonID,scientificName,canonicalName,rank,taxonomicStatus,order,family,genus,vernacularNames,references}'
-          curl -s "https://api.gbif.org/v1/species/search?datasetKey=$D&rank=SPECIES&limit=0&facet=class&facetLimit=50" | jq -c .
-          curl -s "https://api.gbif.org/v1/species/search?datasetKey=$D&limit=3&rank=SPECIES&higherTaxonKey=$(curl -s "https://api.gbif.org/v1/species/search?datasetKey=$D&q=Formicidae&rank=FAMILY&limit=1" | jq -r '.results[0].key')" | jq -c '.count, [.results[] | {canonicalName,taxonomicStatus,extinct,habitats,threatStatuses,vernacularNames}]'
-          echo "--- grid facet test"
-          curl -s "https://api.gbif.org/v1/occurrence/search?country=NL&taxonKey=212&taxonKey=359&decimalLatitude=52.0,52.1&decimalLongitude=5.0,5.15&year=2000,2026&limit=0&facet=speciesKey&facetLimit=3" | jq -c '{count, f:.facets}'
+          for q in "Carebara%20diversa" "Formica%20rufa" "Lasius%20niger"; do
+            k=$(curl -s "https://api.gbif.org/v1/species/search?datasetKey=$D&q=$q&limit=1" | jq -r '.results[0].key')
+            echo "== $q $k"; curl -s "https://api.gbif.org/v1/species/$k/distributions" | jq -c '.results'
+            curl -s "https://api.gbif.org/v1/species/$k" | jq -c '{taxonID, references, remarks, extinct, nubKey}'
+          done
           UA="Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36"
           V=https://www.verspreidingsatlas.nl
-          curl -sL -A "$UA" "$V/js/verspreidingsatlas.js" | grep -oE "['\"][^'\"]*(\.aspx|/api/|soort|ashx|json)[^'\"]*['\"]" | sort -u | head -60
-          curl -sL -A "$UA" "$V/" | grep -oiE '(href|action|src)="[^"]*"' | sort -u | head -80
-          curl -sL -A "$UA" "$V/dashboard/soorten" -o d.html -w "%{http_code} %{url_effective}\n"; grep -oiE 'href="[^"]*"' d.html | sort -u | head -60
-          for u in "$V/9705453" "$V/Parus%20major" "$V/soort/koolmees" "$V/zoeken.aspx?q=koolmees"; do curl -sL -A "$UA" -o x.html -w "$u -> %{http_code} %{url_effective}\n" "$u"; grep -o '<title>[^<]*' x.html; done
+          curl -sL -A "$UA" "$V/9705453" -o x.html; sed -e 's/<[^>]*>/ /g' x.html | tr -s ' \n' | head -c 800; echo
+          for g in reptielen amfibieen planten; do echo "== $g"; curl -sL -A "$UA" "$V/$g" -o g.html; grep -oiE 'href="[^"]*"' g.html | grep -viE 'css|axd|projecten|waarnemingen/|biodiversiteit|determinatie|dashboard' | sort -u | head -50; grep -oiE '<a[^>]*>[^<]{3,40}</a>' g.html | head -20; done
+          for u in "$V/AHCYFAYTGMU" "$V/0AHCYFAYTGMU" "$V/soortenzoeker.aspx?q=koolmees" ; do curl -sL -A "$UA" -o x.html -w "$u -> %{http_code} %{url_effective}\n" "$u"; grep -o '<title>[^<]*<' x.html | tr -d '\n'; sed -e 's/<[^>]*>/ /g' x.html | tr -s ' \n' | head -c 300; echo; done
       - name: publish output
         if: always()
         run: |
