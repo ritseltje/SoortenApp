@@ -41,7 +41,12 @@ bijen: 408 in NSR, 377 recorded in NL
 kevers: 4630 in NSR, 4233 recorded in NL
 mieren: 209 in NSR, 120 recorded in NL
 spinnen: 704 in NSR, 633 recorded in NL
-Dutch names for 0 orders/families
+  100/565
+  200/565
+  300/565
+  400/565
+  500/565
+Dutch names for 410 orders/families
 grid: 728 cells
   100/728
   200/728
@@ -49,5 +54,12 @@ grid: 728 cells
   400/728
   500/728
   600/728
-  700/728
-done: 10613 species, 597 grid cells
+Error: 429 https://api.gbif.org/v1/occurrence/search?country=NL&occurrenceStatus=PRESENT&taxonKey=212&taxonKey=7707728&taxonKey=11592253&taxonKey=11418114&taxonKey=131&taxonKey=359&taxonKey=4334&taxonKey=7901&taxonKey=7908&taxonKey=7905&taxonKey=7911&taxonKey=4345&taxonKey=1470&taxonKey=4342&taxonKey=1496&year=2011%2C2026&decimalLatitude=52.150%2C52.250&decimalLongitude=5.300%2C5.450&limit=0&facet=speciesKey&facetLimit=10000&facetOffset=0
+    at get (file:///home/runner/work/SoortenApp/SoortenApp/scripts/build-data.mjs:44:29)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async speciesCounts (file:///home/runner/work/SoortenApp/SoortenApp/scripts/build-data.mjs:108:15)
+    at async file:///home/runner/work/SoortenApp/SoortenApp/scripts/build-data.mjs:206:20
+    at async file:///home/runner/work/SoortenApp/SoortenApp/scripts/build-data.mjs:59:16
+    at async Promise.all (index 4)
+    at async pool (file:///home/runner/work/SoortenApp/SoortenApp/scripts/build-data.mjs:56:3)
+    at async main (file:///home/runner/work/SoortenApp/SoortenApp/scripts/build-data.mjs:203:16)
