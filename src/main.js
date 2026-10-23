@@ -592,16 +592,20 @@ function openLog({ species }) {
 
 // Install button: Android/desktop Chrome get the native prompt, iOS gets instructions
 // (Safari has no install prompt; it only offers "Zet op beginscherm" in the share menu).
+// Brave (and Chrome without Play services) add a home screen shortcut instead of a real app,
+// and still fire beforeinstallprompt inside it, so check the display mode there too.
 let installPrompt = null;
+const isStandalone = () => ['standalone', 'fullscreen', 'minimal-ui'].some((m) => matchMedia(`(display-mode: ${m})`).matches) || navigator.standalone === true;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   installPrompt = e;
-  $('#install').hidden = false;
+  $('#install').hidden = isStandalone();
 });
 window.addEventListener('appinstalled', () => { $('#install').hidden = true; });
+matchMedia('(display-mode: standalone)').addEventListener('change', (e) => { if (e.matches) $('#install').hidden = true; });
 
 function setupInstall() {
-  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const standalone = isStandalone();
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const btn = $('#install');
   if (standalone) return;
