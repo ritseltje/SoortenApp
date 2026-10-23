@@ -52,6 +52,10 @@ a { color: var(--accent); }
   border-bottom: 1px solid var(--line);
 }
 #top h1 { margin: 0 0 6px; font-size: 18px; color: var(--accent); }
+#top .title { display: flex; justify-content: space-between; align-items: flex-start; }
+#install { font-size: 13px; padding: 4px 10px; border-color: var(--accent); color: var(--accent); }
+.steps { padding-left: 20px; }
+.steps li { margin: 8px 0; }
 #chips {
   display: flex;
   gap: 6px;
