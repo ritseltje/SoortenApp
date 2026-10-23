@@ -2,7 +2,7 @@
 
 export const GROUP_ICONS = {
   vogels: '🐦', planten: '🌿', reptielen: '🦎', amfibieen: '🐸', zoogdieren: '🦔',
-  bijen: '🐝', kevers: '🪲', mieren: '🐜', spinnen: '🕷️',
+  bijen: '🐝', kevers: '🪲', mieren: '🐜', spinnen: '🕷️', paddenstoelen: '🍄',
 };
 
 export const norm = (s) => (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();

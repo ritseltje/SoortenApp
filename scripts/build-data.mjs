@@ -25,6 +25,10 @@ const GROUPS = [
   { id: 'kevers', name: 'Kevers', taxa: [['Coleoptera', 'ORDER']] },
   { id: 'mieren', name: 'Mieren', taxa: [['Formicidae', 'FAMILY']] },
   { id: 'spinnen', name: 'Spinnen', taxa: [['Araneae', 'ORDER']] },
+  {
+    id: 'paddenstoelen', name: 'Paddenstoelen',
+    taxa: ['Agaricomycetes', 'Dacrymycetes', 'Pezizomycetes'].map((c) => [c, 'CLASS']),
+  },
 ];
 
 // verspreidingsatlas.nl only has species pages for these groups
