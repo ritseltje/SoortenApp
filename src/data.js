@@ -7,6 +7,13 @@ export const GROUP_ICONS = {
   libellen: '🪽', hooiwagens: '🦵', zweefvliegen: '🪰',
 };
 
+// Own icons: src/icons/<group id>.svg (or .png) replaces that group's emoji.
+const ICON_FILES = import.meta.glob('./icons/*.{svg,png}', { eager: true, query: '?url', import: 'default' });
+for (const [path, url] of Object.entries(ICON_FILES)) {
+  const id = path.match(/([^/]+)\.\w+$/)[1];
+  if (id in GROUP_ICONS) GROUP_ICONS[id] = `<img class="gicon" src="${url}" alt="">`;
+}
+
 export const norm = (s) => (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export async function loadSpecies() {
