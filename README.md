@@ -19,6 +19,14 @@ Alle waarnemingen en foto's blijven op je telefoon (IndexedDB) — maak af en to
 Open de app-URL (GitHub Pages) in Safari (iPhone) of Chrome (Android) en kies
 **Zet op beginscherm** / **App installeren**. De app werkt daarna ook offline.
 
+## Eigen icoontjes
+
+Elke soortgroep heeft een emoji. Zet je een bestand `src/icons/<groep>.svg` (of `.png`) in de repository,
+dan gebruikt de app dat plaatje in plaats van de emoji. De bestandsnaam is de groepscode, bijvoorbeeld
+`libellen.svg`, `hooiwagens.svg`, `wantsen.svg`, `nachtvlinders.svg` of `zweefvliegen.svg`
+(alle codes staan in `GROUPS` in `scripts/build-data.mjs`). Op GitHub: **Add file › Upload files**.
+Een vierkant plaatje met doorzichtige achtergrond werkt het best.
+
 ## Gegevens
 
 `scripts/build-data.mjs` maakt `public/data/species.json` en `grid.json` uit:
