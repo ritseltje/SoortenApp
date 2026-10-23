@@ -1,0 +1,8 @@
+vogels: Aves nsr=252810283 nub=212
+planten: Tracheophyta nsr=252824031 nub=7707728
+reptielen: Squamata nsr=252810094 nub=undefined
+reptielen: Testudines nsr=252810118 nub=undefined
+Error: Could not resolve reptielen
+    at resolveTaxa (file:///home/runner/work/SoortenApp/SoortenApp/scripts/build-data.mjs:80:61)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async main (file:///home/runner/work/SoortenApp/SoortenApp/scripts/build-data.mjs:129:27)
