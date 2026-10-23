@@ -35,17 +35,20 @@ const GRID = { lat0: 50.75, lon0: 3.35, dLat: 0.1, dLon: 0.15, rows: 28, cols: 2
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function get(url, { json = true, tries = 6 } = {}) {
+async function get(url, { json = true, tries = 10 } = {}) {
   for (let i = 0; ; i++) {
+    let wait = Math.min(60000, 1000 * 2 ** i);
     try {
       const res = await fetch(url, { headers: { 'User-Agent': UA } });
       if (res.ok) return json ? res.json() : res.text();
       if (res.status < 500 && res.status !== 429) throw new Error(`${res.status} ${url}`);
       if (i >= tries) throw new Error(`${res.status} ${url}`);
+      const retryAfter = +res.headers.get('retry-after');
+      if (retryAfter) wait = Math.max(wait, retryAfter * 1000);
     } catch (e) {
       if (i >= tries || /^4\d\d /.test(e.message)) throw e;
     }
-    await sleep(1000 * 2 ** i);
+    await sleep(wait);
   }
 }
 
@@ -200,7 +203,7 @@ async function main() {
   }
   const todo = QUICK ? cells.filter(([r, c]) => r % 7 === 3 && c % 7 === 3) : cells;
   console.log(`grid: ${todo.length} cells`);
-  const grid = await pool(todo, 6, async ([r, c]) => {
+  const grid = await pool(todo, 3, async ([r, c]) => {
     const lat = GRID.lat0 + r * GRID.dLat;
     const lon = GRID.lon0 + c * GRID.dLon;
     const counts = await speciesCounts([
