@@ -119,8 +119,9 @@ async function speciesCounts(params) {
 // --- 4. verspreidingsatlas species codes ------------------------------------
 async function atlasCodes(list) {
   const html = await get(`https://www.verspreidingsatlas.nl/soortenlijst/${list}`, { json: false });
-  const codes = new Map();
-  for (const m of html.matchAll(/href='\/([A-Z]?\d+)'>\s*([^<]+?)\s*<\/a>/g)) codes.set(m[2].trim(), m[1]);
+  const codes = new Map(); // scientific name -> { code, name (Dutch) }
+  const re = /href='\/([A-Z]?\d+)'>\s*([^<]+?)\s*<\/a>\s*<\/td>\s*<td[^>]*>([^<]*)<\/td>/g;
+  for (const m of html.matchAll(re)) codes.set(m[2].trim(), { code: m[1], name: m[3].trim() || null });
   console.log(`atlas ${list}: ${codes.size} codes`);
   return codes;
 }
@@ -134,7 +135,6 @@ async function main() {
 
   const species = [];
   const byNub = new Map();
-  const higher = new Map(); // NSR key -> {name, rank}
   for (const g of GROUPS) {
     const list = await nsrSpecies(g);
     const counts = await speciesCounts(g.nubKeys.map((k) => ['taxonKey', k]));
@@ -155,22 +155,20 @@ async function main() {
     for (const t of list) {
       const total = counts.get(t.nubKey) ?? 0;
       if (!t.nubKey || total === 0 || byNub.has(t.nubKey)) continue; // never recorded in NL: skip
+      const va = atlas.get(t.canonicalName);
       const sp = {
         g: g.id,
-        n: cap(nld(t)) ?? null,
+        n: cap(nld(t) ?? va?.name) ?? null,
         l: t.canonicalName,
         o: t.order ?? null,
         f: t.family ?? null,
         ge: t.genus ?? t.canonicalName.split(' ')[0],
         k: t.nubKey,
         nsr: t.references?.split('/').pop() ?? null,
-        va: atlas.get(t.canonicalName) ?? null,
+        va: va?.code ?? null,
         c: recent.get(t.nubKey) ?? 0,
         ct: total,
       };
-      for (const [rank, key] of [['o', t.orderKey], ['f', t.familyKey]]) {
-        if (key && !higher.has(key)) higher.set(key, { rank, name: rank === 'o' ? t.order : t.family });
-      }
       byNub.set(t.nubKey, species.length);
       species.push(sp);
       kept++;
@@ -178,16 +176,30 @@ async function main() {
     console.log(`${g.id}: ${list.length} in NSR, ${kept} recorded in NL`);
   }
 
-  // Dutch names for orders and families
-  console.log(`higher taxa: ${higher.size}`);
+  // Dutch names for orders and families, from the NSR checklist
   const higherNames = {};
-  await pool([...higher.entries()], 8, async ([key, { name }]) => {
-    try {
-      const r = await get(`${GBIF}/species/${key}/vernacularNames?limit=50`);
-      const v = r.results.find((x) => x.language === 'nld')?.vernacularName;
-      if (v && name) higherNames[name] = cap(v);
-    } catch (e) { console.warn(e.message); }
-  });
+  for (const g of GROUPS) {
+    for (const key of g.nsrKeys) {
+      for (const rank of ['ORDER', 'FAMILY']) {
+        for (let offset = 0; ; offset += 1000) {
+          const r = await get(`${GBIF}/species/search?${qs([
+            ['datasetKey', NSR], ['higherTaxonKey', key], ['rank', rank], ['limit', 1000], ['offset', offset],
+          ])}`);
+          for (const t of r.results) {
+            const v = nld(t);
+            if (v && t.canonicalName) higherNames[t.canonicalName] = cap(v);
+          }
+          if (r.endOfRecords || !r.results.length) break;
+        }
+      }
+      // the group taxon itself can be an order or family (e.g. Formicidae)
+      const self = await get(`${GBIF}/species/${key}/vernacularNames?limit=50`).catch(() => null);
+      const own = await get(`${GBIF}/species/${key}`);
+      const v = self?.results?.find((x) => x.language === 'nld')?.vernacularName;
+      if (v) higherNames[own.canonicalName] = cap(v);
+    }
+  }
+  console.log(`Dutch names for ${Object.keys(higherNames).length} orders/families`);
 
   // Hotspot grid: which species were recorded (recently) in each cell
   const allTaxa = GROUPS.flatMap((g) => g.nubKeys.map((k) => ['taxonKey', k]));
