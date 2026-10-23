@@ -16,60 +16,9 @@ spinnen: Araneae nsr=252814913 nub=1496
 paddenstoelen: Agaricomycetes nsr=252823495 nub=186
 paddenstoelen: Dacrymycetes nsr=252823421 nub=273
 paddenstoelen: Pezizomycetes nsr=252826843 nub=316
-vogels: 651 in NSR, 614 recorded in NL
-atlas vaatplanten: 6315 codes
-  100/965
-  200/965
-  300/965
-  400/965
-  500/965
-  600/965
-  700/965
-  800/965
-  900/965
-planten: 5107 in NSR, 4467 recorded in NL
-atlas reptielen: 38 codes
-reptielen: 27 in NSR, 24 recorded in NL
-atlas amfibieen: 37 codes
-amfibieen: 27 in NSR, 24 recorded in NL
-atlas zoogdieren: 127 codes
-zoogdieren: 126 in NSR, 121 recorded in NL
-bijen: 408 in NSR, 377 recorded in NL
-  100/621
-  200/621
-  300/621
-  400/621
-  500/621
-  600/621
-kevers: 4630 in NSR, 4233 recorded in NL
-mieren: 209 in NSR, 120 recorded in NL
-spinnen: 704 in NSR, 633 recorded in NL
-  100/1283
-  200/1283
-  300/1283
-  400/1283
-  500/1283
-  600/1283
-  700/1283
-  800/1283
-  900/1283
-  1000/1283
-  1100/1283
-  1200/1283
-paddenstoelen: 3858 in NSR, 3233 recorded in NL
-  100/697
-  200/697
-  300/697
-  400/697
-  500/697
-  600/697
-Dutch names for 412 orders/families
-grid: 728 cells
-  100/728
-  200/728
-  300/728
-  400/728
-  500/728
-  600/728
-  700/728
-done: 13846 species, 600 grid cells
+wantsen: Heteroptera nsr=undefined nub=809
+wantsen: Auchenorrhyncha nsr=undefined nub=809
+Error: Could not resolve wantsen
+    at resolveTaxa (file:///home/runner/work/SoortenApp/SoortenApp/scripts/build-data.mjs:119:61)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async main (file:///home/runner/work/SoortenApp/SoortenApp/scripts/build-data.mjs:169:27)
