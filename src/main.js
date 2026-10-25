@@ -25,6 +25,7 @@ const state = {
   groups: new Set(load('groups', null) ?? []),
   tab: load('tab', 'common'),
   commonShown: 60,
+  hokStep: load('hokStep', 1), // map cells merged per side (1 = data grid)
 };
 
 function load(key, fallback) {
@@ -174,6 +175,31 @@ async function renderMap() {
 }
 let mapNodes = [];
 
+// Hok sizes offered on the map, as multiples of the data grid
+const HOK_STEPS = [1, 2, 3, 5];
+const hokKm = (k) => k * 10; // data grid cells are ±10 x 10 km
+
+// Data grid cells merged into k x k blocks; occurrence counts are summed per species
+const mergedGrids = new Map();
+function hokCells(k) {
+  if (k === 1) return gridCells;
+  if (mergedGrids.has(k)) return mergedGrids.get(k);
+  const blocks = new Map();
+  for (const cell of gridCells) {
+    const r = Math.floor(cell.r / k), c = Math.floor(cell.c / k);
+    const key = `${r},${c}`;
+    if (!blocks.has(key)) blocks.set(key, { r, c, sum: new Map() });
+    const { sum } = blocks.get(key);
+    for (let j = 0; j < cell.idx.length; j++) sum.set(cell.idx[j], (sum.get(cell.idx[j]) ?? 0) + cell.cnt[j]);
+  }
+  const out = [...blocks.values()].map(({ r, c, sum }) => {
+    const idx = Int32Array.from(sum.keys());
+    return { r, c, idx, cnt: Int32Array.from(idx, (i) => sum.get(i)) };
+  });
+  mergedGrids.set(k, out);
+  return out;
+}
+
 function cellUnlogged(cell) {
   const sp = state.data.species;
   const out = [];
@@ -192,18 +218,23 @@ function drawCells() {
     $('#map-legend').innerHTML = 'Nog geen hotspotdata beschikbaar.';
     return;
   }
-  const counts = gridCells.map((c) => cellUnlogged(c).length);
+  const k = state.hokStep;
+  const cells = hokCells(k);
+  const counts = cells.map((c) => cellUnlogged(c).length);
   const sorted = counts.filter((n) => n > 0).sort((a, b) => a - b);
   const q = (p) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
   const breaks = [q(0.2), q(0.4), q(0.6), q(0.8), q(0.95)];
   const colors = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#f03b20', '#bd0026'];
   const color = (n) => colors[breaks.filter((b) => n > b).length];
-  gridCells.forEach((cell, i) => {
+  cells.forEach((cell, i) => {
     const n = counts[i];
     if (!n) return;
-    const lat = grid.lat0 + cell.r * grid.dLat;
-    const lon = grid.lon0 + cell.c * grid.dLon;
-    L.rectangle([[lat, lon], [lat + grid.dLat, lon + grid.dLon]], {
+    const lat = grid.lat0 + cell.r * k * grid.dLat;
+    const lon = grid.lon0 + cell.c * k * grid.dLon;
+    // blocks at the grid's edge are cut off where the data grid ends
+    const h = Math.min(k, grid.rows - cell.r * k) * grid.dLat;
+    const w = Math.min(k, grid.cols - cell.c * k) * grid.dLon;
+    L.rectangle([[lat, lon], [lat + h, lon + w]], {
       weight: 0.5, color: '#7a2a00', fillColor: color(n), fillOpacity: 0.55,
     }).on('click', () => showCell(cell, lat, lon)).addTo(cellLayer);
   });
@@ -214,8 +245,16 @@ function drawCells() {
     L.circleMarker([l.lat, l.lon], { radius: 5, weight: 1.5, color: '#fff', fillColor: '#1565c0', fillOpacity: 1 })
       .bindPopup(`<b>${esc(displayName(s))}</b><br>${esc(fmtTime(l.t))}`).addTo(logLayer);
   }
-  $('#map-legend').innerHTML = `<span>Nog niet gelogde soorten per hok</span><span class="scale">${colors.map((c, i) =>
+  $('#map-legend').innerHTML = `<label>Hokken van <select>${HOK_STEPS.map((s) =>
+    `<option value="${s}"${s === k ? ' selected' : ''}>±${hokKm(s)}×${hokKm(s)} km</option>`).join('')}</select></label>
+    <span>Nog niet gelogde soorten per hok</span><span class="scale">${colors.map((c, i) =>
     `<i style="background:${c}"></i>${i < breaks.length ? `<small>${breaks[i]}</small>` : ''}`).join('')}</span>`;
+  $('#map-legend select').onchange = (e) => {
+    state.hokStep = +e.target.value;
+    save('hokStep', state.hokStep);
+    $('#cell-panel').hidden = true;
+    drawCells();
+  };
 }
 
 function showCell(cell, lat, lon) {
