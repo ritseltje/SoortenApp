@@ -317,3 +317,11 @@ body[data-tab="map"] #main { padding: 0; }
 }
 
 .leaflet-container { background: var(--bg); }
+
+.seg { display: flex; margin: 4px 0 6px; }
+.seg button { flex: 1; border-radius: 0; font-size: 14px; padding: 6px 8px; }
+.seg button:first-child { border-radius: 10px 0 0 10px; }
+.seg button:last-child { border-radius: 0 10px 10px 0; border-left: 0; }
+.seg button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.near-head .small { margin-top: 6px; display: block; }
+#cell-panel header .small { align-self: flex-start; margin-top: 6px; }
