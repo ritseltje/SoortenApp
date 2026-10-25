@@ -328,3 +328,9 @@ body[data-tab="map"] #main { padding: 0; }
 .year { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 4px 0 10px; font-size: 17px; }
 .year b { color: var(--accent); }
 .year select { font: inherit; font-size: 14px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--text); }
+.check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin: 2px 0 4px; }
+.season { display: flex; gap: 3px; height: 54px; margin: 4px 0 12px; }
+.season span { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; text-align: center; }
+.season i { display: block; background: var(--line); border-radius: 3px 3px 0 0; min-height: 1px; }
+.season .now i { background: var(--accent); }
+.season small { font-size: 10px; color: var(--muted); text-transform: uppercase; }

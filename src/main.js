@@ -29,6 +29,7 @@ const state = {
   near: load('near', false), // "Te zoeken" for the hokken around a location instead of all of NL
   nearPos: load('nearPos', null), // { lat, lon, src: 'gps' | 'kaart' }
   mineYear: load('mineYear', new Date().getFullYear()), // year shown in Mijn lijst, or 'all'
+  season: load('season', true), // Te zoeken: hide species that are out of season
 };
 
 function load(key, fallback) {
@@ -42,6 +43,16 @@ const groupOn = (s) => state.groups.has(s.g);
 const isLogged = (s) => state.logged.has(s.k);
 const displayName = (s) => s.n ?? s.l;
 const logYear = (l) => new Date(l.t).getFullYear();
+
+// Season: s.m holds the share of observations per month (percent, base36, capped at 35).
+// A species is "nu te vinden" when this month and the months around it together have at least 10%.
+const monthShares = (s) => (s.m ? [...s.m].map((ch) => parseInt(ch, 36)) : null);
+function inSeason(s, month = new Date().getMonth()) {
+  const m = monthShares(s);
+  if (!m) return true; // too few observations to tell
+  return m[(month + 11) % 12] + m[month] + m[(month + 1) % 12] >= 10;
+}
+const seasonOn = (s) => !state.season || inSeason(s);
 
 // ---------------------------------------------------------------- startup
 async function start() {
@@ -133,7 +144,7 @@ function bindRows(root) {
 // ---------------------------------------------------------------- tab: common
 function renderCommon() {
   if (state.near) return renderNear();
-  const list = state.data.species.filter((s) => groupOn(s) && !isLogged(s))
+  const list = state.data.species.filter((s) => groupOn(s) && !isLogged(s) && seasonOn(s))
     .sort((a, b) => b.c - a.c || b.ct - a.ct);
   $('#main').innerHTML = `${scopeToggle()}
     <p class="hint">Algemene soorten die je nog niet hebt gelogd, op volgorde van aantal waarnemingen in Nederland (${esc(state.data.meta.recentYears.replace(',', '–'))}).</p>
@@ -143,7 +154,9 @@ function renderCommon() {
 
 // Toggle between the national list and the list for the hokken around a location
 function scopeToggle() {
-  return `<div class="seg"><button data-scope="nl" class="${state.near ? '' : 'on'}">Heel Nederland</button><button data-scope="near" class="${state.near ? 'on' : ''}">In de buurt</button></div>`;
+  const month = new Date().toLocaleString('nl-NL', { month: 'long' });
+  return `<div class="seg"><button data-scope="nl" class="${state.near ? '' : 'on'}">Heel Nederland</button><button data-scope="near" class="${state.near ? 'on' : ''}">In de buurt</button></div>
+    <label class="check"><input type="checkbox" data-act="season"${state.season ? ' checked' : ''}> Alleen soorten die je rond ${month} kunt vinden</label>`;
 }
 
 function commonList(rows) {
@@ -166,6 +179,12 @@ function bindCommon() {
     renderCommon();
   };
   $('#main [data-act="near-gps"]')?.addEventListener('click', () => locateNear());
+  $('#main [data-act="season"]').onchange = (e) => {
+    state.season = e.target.checked;
+    save('season', state.season);
+    state.commonShown = 60;
+    renderCommon();
+  };
 }
 
 // "In de buurt": the data grid cell at the location plus the 8 cells around it
@@ -221,7 +240,7 @@ async function renderNear() {
     for (let j = 0; j < cell.idx.length; j++) sum.set(cell.idx[j], (sum.get(cell.idx[j]) ?? 0) + cell.cnt[j]);
   }
   const sp = state.data.species;
-  const rows = [...sum].map(([i, n]) => [sp[i], n]).filter(([s]) => s && groupOn(s) && !isLogged(s))
+  const rows = [...sum].map(([i, n]) => [sp[i], n]).filter(([s]) => s && groupOn(s) && !isLogged(s) && seasonOn(s))
     .sort((a, b) => b[1] - a[1] || b[0].c - a[0].c);
   const where = pos.src === 'gps' ? 'je locatie' : 'de gekozen plek op de kaart';
   main.innerHTML = `${head(`Rond ${where} (±15×15 km) · <b>${fmtNum(rows.length)}</b> soorten nog te vinden, op volgorde van aantal waarnemingen daar.`)}
@@ -584,6 +603,7 @@ function openSpecies(s) {
       <dt>Geslacht</dt><dd><i>${esc(s.ge)}</i></dd>
       <dt>Waarnemingen NL</dt><dd>${fmtNum(s.c)} recent · ${fmtNum(s.ct)} totaal</dd>
     </dl>
+    ${seasonBar(s)}
     <div class="links">
       <a href="${lk.waarneming}" target="_blank" rel="noopener">Waarneming.nl ↗</a>
       ${lk.atlas ? `<a href="${lk.atlas}" target="_blank" rel="noopener">Verspreidingsatlas ↗</a>` : ''}
@@ -617,6 +637,16 @@ function openSpecies(s) {
       rerender();
     }
   });
+}
+
+// 12 bars: share of observations per month, the current month highlighted
+function seasonBar(s) {
+  const m = monthShares(s);
+  if (!m) return '';
+  const max = Math.max(...m);
+  const now = new Date().getMonth();
+  return `<div class="season" title="Aandeel waarnemingen per maand">${m.map((v, i) =>
+    `<span class="${i === now ? 'now' : ''}"><i style="height:${Math.round((40 * v) / max)}px"></i><small>${'jfmamjjasond'[i]}</small></span>`).join('')}</div>`;
 }
 
 const srcLabel = (src) => ({ gps: 'GPS-locatie', foto: 'uit foto', kaart: 'gekozen op kaart' }[src] ?? 'onbekend');
