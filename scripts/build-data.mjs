@@ -168,6 +168,14 @@ async function atlasCodes(list) {
   return codes;
 }
 
+// Share of observations per month as 12 base36 characters (percent, capped at 35),
+// e.g. "00137zzz9300"; null when there are too few dated observations to tell.
+function season(perMonth) {
+  const sum = perMonth.reduce((a, b) => a + b, 0);
+  if (sum < 50) return null;
+  return perMonth.map((n) => Math.min(35, Math.round((100 * n) / sum)).toString(36)).join('');
+}
+
 const nld = (t) => t.vernacularNames?.find((v) => v.language === 'nld')?.vernacularName;
 const cap = (s) => s && s[0].toUpperCase() + s.slice(1);
 
@@ -181,6 +189,11 @@ async function main() {
     const list = await nsrSpecies(g);
     const counts = await speciesCounts(g.nubKeys.map((k) => ['taxonKey', k]));
     const recent = await speciesCounts([...g.nubKeys.map((k) => ['taxonKey', k]), ['year', RECENT]]);
+    // recent counts per month (1-12), for the season filter in the app
+    const months = [];
+    for (let m = 1; m <= 12; m++) {
+      months.push(await speciesCounts([...g.nubKeys.map((k) => ['taxonKey', k]), ['year', RECENT], ['month', m]]));
+    }
     let atlas = new Map();
     if (ATLAS_LISTS[g.id]) {
       try { atlas = await atlasCodes(ATLAS_LISTS[g.id]); } catch (e) { console.warn(`atlas failed: ${e.message}`); }
@@ -210,6 +223,7 @@ async function main() {
         va: va?.code ?? null,
         c: recent.get(t.nubKey) ?? 0,
         ct: total,
+        m: season(months.map((mc) => mc.get(t.nubKey) ?? 0)),
       };
       byNub.set(t.nubKey, species.length);
       species.push(sp);

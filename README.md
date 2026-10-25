@@ -7,6 +7,7 @@ hooiwagens en zweefvliegen.
 
 - **Te zoeken**: algemene soorten die je nog niet hebt gelogd, gesorteerd op aantal waarnemingen in NL (laatste 15 jaar).
   Met **In de buurt** alleen soorten uit het hok waar je bent en de hokken eromheen (±15×15 km); via de kaart kun je ook een ander hok kiezen.
+  Standaard verbergt de lijst soorten die buiten hun seizoen zijn: deze maand en de maanden ervoor en erna hebben samen minder dan 10% van de waarnemingen.
 - **Kaart**: hokken van ±10×10 of ±5×5 km (kies in de legenda) gekleurd naar het aantal nog niet gelogde soorten; tik op een hok voor de soortenlijst.
 - **Soorten**: orde › familie › geslacht › soort, met zoeken op Nederlandse of Latijnse naam.
 - **Mijn lijst**: jaarlijst (aantal soorten en voortgang per groep per kalenderjaar, of alle jaren), je waarnemingen, export (CSV) en back-up/terugzetten.
