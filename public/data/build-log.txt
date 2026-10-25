@@ -109,7 +109,7 @@ libellen: Odonata nsr=252815530 nub=789
 hooiwagens: Opiliones nsr=252813470 nub=907
 zweefvliegen: Syrphidae nsr=252818776 nub=6920
 vogels: 651 in NSR, 614 recorded in NL
-atlas vaatplanten: 6315 codes
+atlas vaatplanten: 6316 codes
   100/965
   200/965
   300/965
