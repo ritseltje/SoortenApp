@@ -6,7 +6,7 @@ wantsen en cicaden, sprinkhanen en krekels, dag- en nachtvlinders (macro's), sla
 hooiwagens en zweefvliegen.
 
 - **Te zoeken**: algemene soorten die je nog niet hebt gelogd, gesorteerd op aantal waarnemingen in NL (laatste 15 jaar).
-- **Kaart**: hokken van ±10×10 km gekleurd naar het aantal nog niet gelogde soorten; tik op een hok voor de soortenlijst.
+- **Kaart**: hokken van ±10×10 of ±5×5 km (kies in de legenda) gekleurd naar het aantal nog niet gelogde soorten; tik op een hok voor de soortenlijst.
 - **Soorten**: orde › familie › geslacht › soort, met zoeken op Nederlandse of Latijnse naam.
 - **Mijn lijst**: je waarnemingen, voortgang per groep, export (CSV) en back-up/terugzetten.
 

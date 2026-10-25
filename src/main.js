@@ -25,6 +25,7 @@ const state = {
   groups: new Set(load('groups', null) ?? []),
   tab: load('tab', 'common'),
   commonShown: 60,
+  hokKm: load('hokKm', 10), // hok size on the map
 };
 
 function load(key, fallback) {
@@ -174,6 +175,32 @@ async function renderMap() {
 }
 let mapNodes = [];
 
+// Hok sizes offered on the map; each is a whole number of data grid cells per side
+const HOK_KM = [5, 10];
+const baseKm = () => Math.max(5, Math.round(state.data.meta.grid.dLat * 111 / 5) * 5); // data grid is ±5 or ±10 km
+const hokSizes = () => HOK_KM.filter((km) => km % baseKm() === 0);
+
+// Data grid cells merged into k x k blocks; occurrence counts are summed per species
+const mergedGrids = new Map();
+function hokCells(k) {
+  if (k === 1) return gridCells;
+  if (mergedGrids.has(k)) return mergedGrids.get(k);
+  const blocks = new Map();
+  for (const cell of gridCells) {
+    const r = Math.floor(cell.r / k), c = Math.floor(cell.c / k);
+    const key = `${r},${c}`;
+    if (!blocks.has(key)) blocks.set(key, { r, c, sum: new Map() });
+    const { sum } = blocks.get(key);
+    for (let j = 0; j < cell.idx.length; j++) sum.set(cell.idx[j], (sum.get(cell.idx[j]) ?? 0) + cell.cnt[j]);
+  }
+  const out = [...blocks.values()].map(({ r, c, sum }) => {
+    const idx = Int32Array.from(sum.keys());
+    return { r, c, idx, cnt: Int32Array.from(idx, (i) => sum.get(i)) };
+  });
+  mergedGrids.set(k, out);
+  return out;
+}
+
 function cellUnlogged(cell) {
   const sp = state.data.species;
   const out = [];
@@ -192,18 +219,25 @@ function drawCells() {
     $('#map-legend').innerHTML = 'Nog geen hotspotdata beschikbaar.';
     return;
   }
-  const counts = gridCells.map((c) => cellUnlogged(c).length);
+  const sizes = hokSizes();
+  const km = sizes.includes(state.hokKm) ? state.hokKm : sizes.at(-1);
+  const k = km / baseKm();
+  const cells = hokCells(k);
+  const counts = cells.map((c) => cellUnlogged(c).length);
   const sorted = counts.filter((n) => n > 0).sort((a, b) => a - b);
   const q = (p) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
   const breaks = [q(0.2), q(0.4), q(0.6), q(0.8), q(0.95)];
   const colors = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#f03b20', '#bd0026'];
   const color = (n) => colors[breaks.filter((b) => n > b).length];
-  gridCells.forEach((cell, i) => {
+  cells.forEach((cell, i) => {
     const n = counts[i];
     if (!n) return;
-    const lat = grid.lat0 + cell.r * grid.dLat;
-    const lon = grid.lon0 + cell.c * grid.dLon;
-    L.rectangle([[lat, lon], [lat + grid.dLat, lon + grid.dLon]], {
+    const lat = grid.lat0 + cell.r * k * grid.dLat;
+    const lon = grid.lon0 + cell.c * k * grid.dLon;
+    // blocks at the grid's edge are cut off where the data grid ends
+    const h = Math.min(k, grid.rows - cell.r * k) * grid.dLat;
+    const w = Math.min(k, grid.cols - cell.c * k) * grid.dLon;
+    L.rectangle([[lat, lon], [lat + h, lon + w]], {
       weight: 0.5, color: '#7a2a00', fillColor: color(n), fillOpacity: 0.55,
     }).on('click', () => showCell(cell, lat, lon)).addTo(cellLayer);
   });
@@ -214,8 +248,17 @@ function drawCells() {
     L.circleMarker([l.lat, l.lon], { radius: 5, weight: 1.5, color: '#fff', fillColor: '#1565c0', fillOpacity: 1 })
       .bindPopup(`<b>${esc(displayName(s))}</b><br>${esc(fmtTime(l.t))}`).addTo(logLayer);
   }
-  $('#map-legend').innerHTML = `<span>Nog niet gelogde soorten per hok</span><span class="scale">${colors.map((c, i) =>
+  const picker = sizes.length > 1 ? `<label>Hokken van <select>${sizes.map((s) =>
+    `<option value="${s}"${s === km ? ' selected' : ''}>±${s}×${s} km</option>`).join('')}</select></label>` : '';
+  $('#map-legend').innerHTML = `${picker}
+    <span>Nog niet gelogde soorten per hok</span><span class="scale">${colors.map((c, i) =>
     `<i style="background:${c}"></i>${i < breaks.length ? `<small>${breaks[i]}</small>` : ''}`).join('')}</span>`;
+  if (picker) $('#map-legend select').onchange = (e) => {
+    state.hokKm = +e.target.value;
+    save('hokKm', state.hokKm);
+    $('#cell-panel').hidden = true;
+    drawCells();
+  };
 }
 
 function showCell(cell, lat, lon) {
