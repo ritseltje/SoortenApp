@@ -25,7 +25,7 @@ const state = {
   groups: new Set(load('groups', null) ?? []),
   tab: load('tab', 'common'),
   commonShown: 60,
-  hokStep: load('hokStep', 1), // map cells merged per side (1 = data grid)
+  hokKm: load('hokKm', 10), // hok size on the map
 };
 
 function load(key, fallback) {
@@ -175,9 +175,10 @@ async function renderMap() {
 }
 let mapNodes = [];
 
-// Hok sizes offered on the map, as multiples of the data grid
-const HOK_STEPS = [1, 2, 3, 5];
-const hokKm = (k) => k * 10; // data grid cells are ±10 x 10 km
+// Hok sizes offered on the map; each is a whole number of data grid cells per side
+const HOK_KM = [5, 10];
+const baseKm = () => Math.max(5, Math.round(state.data.meta.grid.dLat * 111 / 5) * 5); // data grid is ±5 or ±10 km
+const hokSizes = () => HOK_KM.filter((km) => km % baseKm() === 0);
 
 // Data grid cells merged into k x k blocks; occurrence counts are summed per species
 const mergedGrids = new Map();
@@ -218,7 +219,9 @@ function drawCells() {
     $('#map-legend').innerHTML = 'Nog geen hotspotdata beschikbaar.';
     return;
   }
-  const k = state.hokStep;
+  const sizes = hokSizes();
+  const km = sizes.includes(state.hokKm) ? state.hokKm : sizes.at(-1);
+  const k = km / baseKm();
   const cells = hokCells(k);
   const counts = cells.map((c) => cellUnlogged(c).length);
   const sorted = counts.filter((n) => n > 0).sort((a, b) => a - b);
@@ -245,13 +248,14 @@ function drawCells() {
     L.circleMarker([l.lat, l.lon], { radius: 5, weight: 1.5, color: '#fff', fillColor: '#1565c0', fillOpacity: 1 })
       .bindPopup(`<b>${esc(displayName(s))}</b><br>${esc(fmtTime(l.t))}`).addTo(logLayer);
   }
-  $('#map-legend').innerHTML = `<label>Hokken van <select>${HOK_STEPS.map((s) =>
-    `<option value="${s}"${s === k ? ' selected' : ''}>±${hokKm(s)}×${hokKm(s)} km</option>`).join('')}</select></label>
+  const picker = sizes.length > 1 ? `<label>Hokken van <select>${sizes.map((s) =>
+    `<option value="${s}"${s === km ? ' selected' : ''}>±${s}×${s} km</option>`).join('')}</select></label>` : '';
+  $('#map-legend').innerHTML = `${picker}
     <span>Nog niet gelogde soorten per hok</span><span class="scale">${colors.map((c, i) =>
     `<i style="background:${c}"></i>${i < breaks.length ? `<small>${breaks[i]}</small>` : ''}`).join('')}</span>`;
-  $('#map-legend select').onchange = (e) => {
-    state.hokStep = +e.target.value;
-    save('hokStep', state.hokStep);
+  if (picker) $('#map-legend select').onchange = (e) => {
+    state.hokKm = +e.target.value;
+    save('hokKm', state.hokKm);
     $('#cell-panel').hidden = true;
     drawCells();
   };

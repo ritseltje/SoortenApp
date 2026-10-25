@@ -69,8 +69,8 @@ const GROUPS = [
 // verspreidingsatlas.nl only has species pages for these groups
 const ATLAS_LISTS = { planten: 'vaatplanten', zoogdieren: 'zoogdieren', reptielen: 'reptielen', amfibieen: 'amfibieen' };
 
-// Grid for hotspots: ~11 x 10 km cells over the Netherlands
-const GRID = { lat0: 50.75, lon0: 3.35, dLat: 0.1, dLon: 0.15, rows: 28, cols: 26 };
+// Grid for hotspots: ~5.5 x 5 km cells over the Netherlands (the app can merge them into ~10 km hokken)
+const GRID = { lat0: 50.75, lon0: 3.35, dLat: 0.05, dLon: 0.075, rows: 56, cols: 52 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -240,7 +240,7 @@ async function main() {
   for (let r = 0; r < GRID.rows; r++) {
     for (let c = 0; c < GRID.cols; c++) cells.push([r, c]);
   }
-  const todo = QUICK ? cells.filter(([r, c]) => r % 7 === 3 && c % 7 === 3) : cells;
+  const todo = QUICK ? cells.filter(([r, c]) => r % 14 === 7 && c % 14 === 7) : cells;
   console.log(`grid: ${todo.length} cells`);
   const grid = await pool(todo, 3, async ([r, c]) => {
     const lat = GRID.lat0 + r * GRID.dLat;
