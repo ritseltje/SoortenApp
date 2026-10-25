@@ -28,6 +28,7 @@ const state = {
   hokKm: load('hokKm', 10), // hok size on the map
   near: load('near', false), // "Te zoeken" for the hokken around a location instead of all of NL
   nearPos: load('nearPos', null), // { lat, lon, src: 'gps' | 'kaart' }
+  mineYear: load('mineYear', new Date().getFullYear()), // year shown in Mijn lijst, or 'all'
 };
 
 function load(key, fallback) {
@@ -40,6 +41,7 @@ function save(key, value) {
 const groupOn = (s) => state.groups.has(s.g);
 const isLogged = (s) => state.logged.has(s.k);
 const displayName = (s) => s.n ?? s.l;
+const logYear = (l) => new Date(l.t).getFullYear();
 
 // ---------------------------------------------------------------- startup
 async function start() {
@@ -447,15 +449,24 @@ function rank(s, q) {
 // ---------------------------------------------------------------- tab: my logs
 function renderMine() {
   const { groups } = state.data.meta;
+  // year list: the selected calendar year, or all years ('all')
+  const years = [...new Set([new Date().getFullYear(), ...state.logs.map(logYear)])].sort((a, b) => b - a);
+  const year = state.mineYear === 'all' || years.includes(state.mineYear) ? state.mineYear : years[0];
+  const inYear = (l) => year === 'all' || logYear(l) === year;
+  const seen = new Set(state.logs.filter(inYear).map((l) => l.k));
   const stats = groups.map((g) => {
     const all = state.data.species.filter((s) => s.g === g.id);
-    return { g, total: all.length, done: all.filter(isLogged).length };
+    return { g, total: all.length, done: all.filter((s) => seen.has(s.k)).length };
   });
   const logs = state.logs.filter((l) => {
     const s = state.data.byKey.get(l.k);
-    return s && groupOn(s);
+    return s && groupOn(s) && inYear(l);
   });
+  const nSeen = state.data.species.filter((s) => groupOn(s) && seen.has(s.k)).length;
   $('#main').innerHTML = `
+    <div class="year"><b>${year === 'all' ? 'Totaal' : year}: ${fmtNum(nSeen)} ${nSeen === 1 ? 'soort' : 'soorten'}</b>
+      <select aria-label="Jaar">${years.map((y) => `<option value="${y}"${y === year ? ' selected' : ''}>${y}</option>`).join('')}
+        <option value="all"${year === 'all' ? ' selected' : ''}>Alle jaren</option></select></div>
     <div class="stats">${stats.map(({ g, total, done }) =>
       `<div><span>${GROUP_ICONS[g.id]} ${esc(g.name)}</span><b>${fmtNum(done)}</b><small>van ${fmtNum(total)}</small></div>`).join('')}</div>
     <div class="actions">
@@ -464,7 +475,12 @@ function renderMine() {
       <label class="button">Back-up terugzetten<input type="file" accept="application/json,.json" hidden id="imp"></label>
     </div>
     <ul class="list logs">${logs.map(logRow).join('')}</ul>
-    ${!logs.length ? '<p class="empty">Nog geen waarnemingen gelogd. Tik op ＋ om te beginnen.</p>' : ''}`;
+    ${!logs.length ? `<p class="empty">${year === 'all' ? 'Nog geen waarnemingen gelogd' : `Nog geen waarnemingen in ${year}`}. Tik op ＋ om te beginnen.</p>` : ''}`;
+  $('#main .year select').onchange = (e) => {
+    state.mineYear = e.target.value === 'all' ? 'all' : +e.target.value;
+    save('mineYear', state.mineYear);
+    renderMine();
+  };
   attachThumbs($('#main'));
   bindRows($('#main .logs'));
   $('#exp-csv').onclick = exportCsv;
@@ -742,12 +758,18 @@ function openLog({ species, edit }) {
       const t = $('[name="time"]', el).value;
       log.t = t ? new Date(t).toISOString() : new Date().toISOString();
       log.note = $('[name="note"]', el).value.trim();
+      // is this the first log of the species, or the first one in its year?
+      const others = state.logs.filter((l) => l.k === log.k && l.id !== log.id);
+      const moved = !edit || edit.k !== log.k || logYear(edit) !== logYear(log);
+      const news = !moved ? '' : !others.length ? 'nieuw voor je lijst!'
+        : !others.some((l) => logYear(l) === logYear(log)) ? `nieuw voor ${logYear(log)}!` : '';
       await putLog(log);
       thumbUrls.delete(log.id);
       await refreshLogs();
       const s = state.data.byKey.get(log.k);
       close();
-      toast(edit ? `${displayName(s)} bijgewerkt` : `${displayName(s)} gelogd${log.lat == null ? ' (zonder locatie)' : ''}`);
+      if (news) toast(`🎉 ${displayName(s)}: ${news}`);
+      else toast(edit ? `${displayName(s)} bijgewerkt` : `${displayName(s)} gelogd${log.lat == null ? ' (zonder locatie)' : ''}`);
       rerender();
     }
   });

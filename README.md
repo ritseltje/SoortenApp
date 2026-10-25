@@ -9,7 +9,8 @@ hooiwagens en zweefvliegen.
   Met **In de buurt** alleen soorten uit het hok waar je bent en de hokken eromheen (±15×15 km); via de kaart kun je ook een ander hok kiezen.
 - **Kaart**: hokken van ±10×10 of ±5×5 km (kies in de legenda) gekleurd naar het aantal nog niet gelogde soorten; tik op een hok voor de soortenlijst.
 - **Soorten**: orde › familie › geslacht › soort, met zoeken op Nederlandse of Latijnse naam.
-- **Mijn lijst**: je waarnemingen, voortgang per groep, export (CSV) en back-up/terugzetten.
+- **Mijn lijst**: jaarlijst (aantal soorten en voortgang per groep per kalenderjaar, of alle jaren), je waarnemingen, export (CSV) en back-up/terugzetten.
+  Bij het loggen meldt de app of een soort nieuw is voor je lijst of nieuw voor dat jaar.
 
 Loggen bewaart tijdstip en GPS-locatie (aanpasbaar op de kaart), optioneel met foto. Een waarneming kun je later bewerken (✏️ in het soortscherm).
 Kies je een foto met EXIF-gegevens, dan worden tijd en locatie uit de foto overgenomen.

@@ -325,3 +325,6 @@ body[data-tab="map"] #main { padding: 0; }
 .seg button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .near-head .small { margin-top: 6px; display: block; }
 #cell-panel header .small { align-self: flex-start; margin-top: 6px; }
+.year { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 4px 0 10px; font-size: 17px; }
+.year b { color: var(--accent); }
+.year select { font: inherit; font-size: 14px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--text); }
