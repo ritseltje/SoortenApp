@@ -1,6 +1,8 @@
 // Offline support: the app and species data are served from cache when there is no
 // network; map tiles that were viewed before stay available too.
-const APP = 'app-v2';
+// The build stamps a build id into the name (vite.config.js), so every deploy gets a fresh cache
+// and files from older versions are removed instead of lingering as offline fallbacks.
+const APP = 'app-__BUILD__';
 const TILES = 'tiles-v1';
 
 // The built JS/CSS have hashed names, so read them from index.html instead of listing them here.
@@ -37,8 +39,10 @@ self.addEventListener('fetch', (e) => {
   }
   if (url.origin !== location.origin) return;
   // network first, so updates arrive as soon as there is a connection
+  // Page loads all share one cached copy of the app, whatever query string they carry.
+  const key = req.mode === 'navigate' ? './' : req;
   e.respondWith(fetch(req).then((res) => {
-    if (res.ok) caches.open(APP).then((c) => c.put(req, res.clone()));
+    if (res.ok) caches.open(APP).then((c) => c.put(key, res.clone()));
     return res;
-  }).catch(() => caches.match(req, { ignoreSearch: true })));
+  }).catch(() => caches.open(APP).then((c) => c.match(key, { ignoreSearch: true }))));
 });
