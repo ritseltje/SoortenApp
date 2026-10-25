@@ -26,6 +26,8 @@ const state = {
   tab: load('tab', 'common'),
   commonShown: 60,
   hokKm: load('hokKm', 10), // hok size on the map
+  near: load('near', false), // "Te zoeken" for the hokken around a location instead of all of NL
+  nearPos: load('nearPos', null), // { lat, lon, src: 'gps' | 'kaart' }
 };
 
 function load(key, fallback) {
@@ -128,16 +130,101 @@ function bindRows(root) {
 
 // ---------------------------------------------------------------- tab: common
 function renderCommon() {
+  if (state.near) return renderNear();
   const list = state.data.species.filter((s) => groupOn(s) && !isLogged(s))
     .sort((a, b) => b.c - a.c || b.ct - a.ct);
-  const shown = list.slice(0, state.commonShown);
-  $('#main').innerHTML = `
+  $('#main').innerHTML = `${scopeToggle()}
     <p class="hint">Algemene soorten die je nog niet hebt gelogd, op volgorde van aantal waarnemingen in Nederland (${esc(state.data.meta.recentYears.replace(',', '–'))}).</p>
-    <ul class="list">${shown.map((s) => speciesRow(s, `<span class="count">${fmtNum(s.c)}</span>`)).join('')}</ul>
-    ${list.length > shown.length ? `<button class="more">Meer tonen (${fmtNum(list.length - shown.length)} over)</button>` : ''}
-    ${!list.length ? '<p class="empty">Alles gelogd in deze groep(en)! 🎉</p>' : ''}`;
-  bindRows($('#main .list'));
+    ${commonList(list.map((s) => [s, s.c]))}`;
+  bindCommon(list.length);
+}
+
+// Toggle between the national list and the list for the hokken around a location
+function scopeToggle() {
+  return `<div class="seg"><button data-scope="nl" class="${state.near ? '' : 'on'}">Heel Nederland</button><button data-scope="near" class="${state.near ? 'on' : ''}">In de buurt</button></div>`;
+}
+
+function commonList(rows) {
+  const shown = rows.slice(0, state.commonShown);
+  return `<ul class="list">${shown.map(([s, n]) => speciesRow(s, `<span class="count">${fmtNum(n)}</span>`)).join('')}</ul>
+    ${rows.length > shown.length ? `<button class="more">Meer tonen (${fmtNum(rows.length - shown.length)} over)</button>` : ''}
+    ${!rows.length ? '<p class="empty">Alles gelogd in deze groep(en)! 🎉</p>' : ''}`;
+}
+
+function bindCommon() {
+  const list = $('#main .list');
+  if (list) bindRows(list);
   $('#main .more')?.addEventListener('click', () => { state.commonShown += 100; renderCommon(); });
+  $('#main .seg').onclick = (e) => {
+    const b = e.target.closest('[data-scope]');
+    if (!b || (b.dataset.scope === 'near') === state.near) return;
+    state.near = b.dataset.scope === 'near';
+    save('near', state.near);
+    state.commonShown = 60;
+    renderCommon();
+  };
+  $('#main [data-act="near-gps"]')?.addEventListener('click', () => locateNear());
+}
+
+// "In de buurt": the data grid cell at the location plus the 8 cells around it
+let gridIndex;
+async function nearCells(pos) {
+  gridCells ??= await loadGrid();
+  gridIndex ??= new Map(gridCells.map((c) => [`${c.r},${c.c}`, c]));
+  const { grid } = state.data.meta;
+  const r = Math.floor((pos.lat - grid.lat0) / grid.dLat), c = Math.floor((pos.lon - grid.lon0) / grid.dLon);
+  const out = [];
+  for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+    const cell = gridIndex.get(`${r + dr},${c + dc}`);
+    if (cell) out.push(cell);
+  }
+  return out;
+}
+
+function locateNear() {
+  nearStatus = 'locatie bepalen…';
+  renderCommon();
+  getPosition().then((p) => setNearPos({ lat: p.lat, lon: p.lon, src: 'gps' }))
+    .catch((e) => { nearStatus = e.message; if (state.tab === 'common') renderCommon(); });
+}
+
+function setNearPos(pos) {
+  state.nearPos = pos;
+  save('nearPos', pos);
+  nearStatus = '';
+  if (state.tab === 'common') renderCommon();
+}
+
+let nearStatus = '';
+async function renderNear() {
+  const main = $('#main');
+  const pos = state.nearPos;
+  const head = (text) => `${scopeToggle()}<p class="hint near-head">${nearStatus ? esc(nearStatus) : text}
+    <button class="small" data-act="near-gps">◎ ${pos ? 'Locatie vernieuwen' : 'Gebruik mijn locatie'}</button></p>`;
+  if (!pos) {
+    main.innerHTML = `${head('Nog geen locatie gekozen.')}
+      <p class="empty">Gebruik je locatie, of tik op de kaart op een hok en kies <b>Te zoeken hier</b>.</p>`;
+    bindCommon();
+    if (!nearStatus) locateNear();
+    return;
+  }
+  if (!gridCells) {
+    main.innerHTML = `${head('Hokdata laden…')}`;
+    bindCommon();
+  }
+  const cells = await nearCells(pos);
+  if (state.tab !== 'common' || !state.near || state.nearPos !== pos) return;
+  const sum = new Map();
+  for (const cell of cells) {
+    for (let j = 0; j < cell.idx.length; j++) sum.set(cell.idx[j], (sum.get(cell.idx[j]) ?? 0) + cell.cnt[j]);
+  }
+  const sp = state.data.species;
+  const rows = [...sum].map(([i, n]) => [sp[i], n]).filter(([s]) => s && groupOn(s) && !isLogged(s))
+    .sort((a, b) => b[1] - a[1] || b[0].c - a[0].c);
+  const where = pos.src === 'gps' ? 'je locatie' : 'de gekozen plek op de kaart';
+  main.innerHTML = `${head(`Rond ${where} (±15×15 km) · <b>${fmtNum(rows.length)}</b> soorten nog te vinden, op volgorde van aantal waarnemingen daar.`)}
+    ${cells.length ? commonList(rows) : '<p class="empty">Geen hokdata voor deze plek.</p>'}`;
+  bindCommon();
 }
 
 // ---------------------------------------------------------------- tab: map
@@ -179,6 +266,7 @@ let mapNodes = [];
 const HOK_KM = [5, 10];
 const baseKm = () => Math.max(5, Math.round(state.data.meta.grid.dLat * 111 / 5) * 5); // data grid is ±5 or ±10 km
 const hokSizes = () => HOK_KM.filter((km) => km % baseKm() === 0);
+const hokKmNow = () => (hokSizes().includes(state.hokKm) ? state.hokKm : hokSizes().at(-1));
 
 // Data grid cells merged into k x k blocks; occurrence counts are summed per species
 const mergedGrids = new Map();
@@ -220,7 +308,7 @@ function drawCells() {
     return;
   }
   const sizes = hokSizes();
-  const km = sizes.includes(state.hokKm) ? state.hokKm : sizes.at(-1);
+  const km = hokKmNow();
   const k = km / baseKm();
   const cells = hokCells(k);
   const counts = cells.map((c) => cellUnlogged(c).length);
@@ -267,9 +355,19 @@ function showCell(cell, lat, lon) {
   panel.hidden = false;
   panel.innerHTML = `<header><b>${fmtNum(list.length)} nog niet gelogde soorten</b>
       <small>hok ${lat.toFixed(2)}°N ${lon.toFixed(2)}°O · aantal waarnemingen</small>
+      <button class="small" data-act="here">⭐ Te zoeken hier</button>
       <button class="close" aria-label="Sluiten">✕</button></header>
     <ul class="list">${list.slice(0, 300).map(([s, n]) => speciesRow(s, `<span class="count">${fmtNum(n)}</span>`)).join('')}</ul>`;
   panel.querySelector('.close').onclick = () => { panel.hidden = true; };
+  panel.querySelector('[data-act="here"]').onclick = () => {
+    const { grid } = state.data.meta;
+    const k = hokKmNow() / baseKm();
+    state.near = true;
+    save('near', true);
+    setNearPos({ lat: lat + (k * grid.dLat) / 2, lon: lon + (k * grid.dLon) / 2, src: 'kaart' });
+    panel.hidden = true;
+    showTab('common');
+  };
   bindRows(panel.querySelector('.list'));
 }
 
@@ -480,6 +578,7 @@ function openSpecies(s) {
       <li class="row">
         ${l.photo ? `<img class="thumb big" data-photo="${l.id}" alt="">` : ''}
         <span class="names"><b>${esc(fmtTime(l.t))}</b><small>${l.lat != null ? `${l.lat.toFixed(5)}, ${l.lon.toFixed(5)}` : 'geen locatie'} · ${esc(srcLabel(l.src))}</small>${l.note ? `<small>${esc(l.note)}</small>` : ''}</span>
+        <button class="del" data-edit="${l.id}" aria-label="Bewerken">✏️</button>
         <button class="del" data-del="${l.id}" aria-label="Verwijderen">🗑</button>
       </li>`).join('')}</ul>` : ''}`);
   attachThumbs(el);
@@ -487,6 +586,12 @@ function openSpecies(s) {
     if (e.target.closest('[data-act="log"]')) {
       history.back();
       setTimeout(() => openLog({ species: s }), 50);
+    }
+    const edit = e.target.closest('[data-edit]');
+    if (edit) {
+      const log = logs.find((l) => l.id === edit.dataset.edit);
+      history.back();
+      setTimeout(() => openLog({ edit: log }), 50);
     }
     const del = e.target.closest('[data-del]');
     if (del && confirm('Deze waarneming verwijderen?')) {
@@ -513,10 +618,12 @@ function getPosition() {
 
 const toLocalInput = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
-function openLog({ species }) {
-  const log = { id: newId(), k: species?.k ?? null, t: new Date().toISOString(), lat: null, lon: null, acc: null, src: null, note: '', photo: null };
+// Opens the log form for a new observation, or with `edit` for an existing one
+function openLog({ species, edit }) {
+  const log = edit ? { ...edit }
+    : { id: newId(), k: species?.k ?? null, t: new Date().toISOString(), lat: null, lon: null, acc: null, src: null, note: '', photo: null };
   const { el, close } = openSheet(`
-    <header><h2>Waarneming loggen</h2><button class="close" aria-label="Sluiten">✕</button></header>
+    <header><h2>${edit ? 'Waarneming bewerken' : 'Waarneming loggen'}</h2><button class="close" aria-label="Sluiten">✕</button></header>
     <div class="field species-pick">
       <label>Soort</label>
       <div class="picked"></div>
@@ -530,11 +637,12 @@ function openLog({ species }) {
         <label class="button">🖼 Galerij<input type="file" accept="image/*" hidden data-photo-input></label>
       </div>
       <img class="preview" hidden alt="">
+      <button class="small" data-act="no-photo" hidden>Foto verwijderen</button>
       <p class="photo-info hint"></p>
     </div>
     <div class="field">
       <label>Tijdstip</label>
-      <input type="datetime-local" name="time" value="${toLocalInput(new Date())}">
+      <input type="datetime-local" name="time" value="${toLocalInput(new Date(log.t))}">
     </div>
     <div class="field">
       <label>Locatie <small class="loc-src"></small></label>
@@ -543,7 +651,7 @@ function openLog({ species }) {
     </div>
     <div class="field">
       <label>Notitie (optioneel)</label>
-      <textarea name="note" rows="2"></textarea>
+      <textarea name="note" rows="2">${esc(log.note)}</textarea>
     </div>
     <button class="primary" data-act="save">Opslaan</button>`);
 
@@ -584,7 +692,19 @@ function openLog({ species }) {
     getPosition().then((p) => { if (log.src !== 'foto') setLoc(p.lat, p.lon, 'gps', p.acc); })
       .catch((e) => { if (log.lat == null) $('.loc-src', el).textContent = `${e.message} – tik op de kaart`; });
   };
-  useGps();
+  if (!edit) useGps();
+  else if (log.lat != null) {
+    setLoc(log.lat, log.lon, log.src, log.acc);
+    lmap.setView([log.lat, log.lon], 15);
+  } else $('.loc-src', el).textContent = 'geen locatie – tik op de kaart';
+
+  const showPhoto = () => {
+    const prev = $('.preview', el);
+    prev.hidden = !log.photo;
+    if (log.photo) prev.src = URL.createObjectURL(log.photo);
+    $('[data-act="no-photo"]', el).hidden = !log.photo;
+  };
+  showPhoto();
 
   // photo
   el.querySelectorAll('[data-photo-input]').forEach((inp) => inp.addEventListener('change', async () => {
@@ -598,9 +718,7 @@ function openLog({ species }) {
     } catch {
       log.photo = file;
     }
-    const prev = $('.preview', el);
-    prev.src = URL.createObjectURL(log.photo);
-    prev.hidden = false;
+    showPhoto();
     const found = [];
     if (meta.time) {
       $('[name="time"]', el).value = toLocalInput(meta.time);
@@ -618,16 +736,18 @@ function openLog({ species }) {
     if (pick) { log.k = +pick.dataset.pick; search.value = ''; picks.innerHTML = ''; showPicked(); }
     if (e.target.closest('[data-act="change"]')) { log.k = null; showPicked(); }
     if (e.target.closest('[data-act="gps"]')) { log.src = null; useGps(); }
+    if (e.target.closest('[data-act="no-photo"]')) { log.photo = null; showPhoto(); $('.photo-info', el).textContent = ''; }
     if (e.target.closest('[data-act="save"]')) {
       if (!log.k) return toast('Kies eerst een soort');
       const t = $('[name="time"]', el).value;
       log.t = t ? new Date(t).toISOString() : new Date().toISOString();
       log.note = $('[name="note"]', el).value.trim();
       await putLog(log);
+      thumbUrls.delete(log.id);
       await refreshLogs();
       const s = state.data.byKey.get(log.k);
       close();
-      toast(`${displayName(s)} gelogd${log.lat == null ? ' (zonder locatie)' : ''}`);
+      toast(edit ? `${displayName(s)} bijgewerkt` : `${displayName(s)} gelogd${log.lat == null ? ' (zonder locatie)' : ''}`);
       rerender();
     }
   });
