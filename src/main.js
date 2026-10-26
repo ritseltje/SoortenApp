@@ -7,6 +7,7 @@ import './style.css';
 import { loadSpecies, loadGrid, links, norm, GROUP_ICONS } from './data.js';
 import { allLogs, putLog, deleteLog, newId } from './db.js';
 import { readPhotoMeta, shrinkPhoto } from './photo.js';
+import { parseCsv, waarnemingLogs } from './waarneming.js';
 
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow });
 
@@ -492,6 +493,7 @@ function renderMine() {
       <button id="exp-csv">Exporteer CSV</button>
       <button id="exp-json">Back-up maken</button>
       <label class="button">Back-up terugzetten<input type="file" accept="application/json,.json" hidden id="imp"></label>
+      <label class="button">Importeer van waarneming.nl<input type="file" accept="text/csv,.csv" hidden id="imp-wnl"></label>
     </div>
     <ul class="list logs">${logs.map(logRow).join('')}</ul>
     ${!logs.length ? `<p class="empty">${year === 'all' ? 'Nog geen waarnemingen gelogd' : `Nog geen waarnemingen in ${year}`}. Tik op ＋ om te beginnen.</p>` : ''}`;
@@ -505,6 +507,7 @@ function renderMine() {
   $('#exp-csv').onclick = exportCsv;
   $('#exp-json').onclick = exportJson;
   $('#imp').onchange = (e) => importJson(e.target.files[0]);
+  $('#imp-wnl').onchange = (e) => importWaarneming(e.target.files[0]);
 }
 
 function logRow(l) {
@@ -535,10 +538,10 @@ function download(name, blob) {
 
 function exportCsv() {
   const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const rows = [['datum', 'nederlandse_naam', 'latijnse_naam', 'groep', 'breedtegraad', 'lengtegraad', 'bron', 'notitie']];
+  const rows = [['datum', 'nederlandse_naam', 'latijnse_naam', 'groep', 'breedtegraad', 'lengtegraad', 'bron', 'notitie', 'link']];
   for (const l of state.logs) {
     const s = state.data.byKey.get(l.k);
-    rows.push([l.t, s?.n, s?.l, s?.g, l.lat, l.lon, l.src, l.note]);
+    rows.push([l.t, s?.n, s?.l, s?.g, l.lat, l.lon, l.src, l.note, l.url]);
   }
   download('waarnemingen.csv', new Blob([rows.map((r) => r.map(q).join(',')).join('\n')], { type: 'text/csv' }));
 }
@@ -563,6 +566,37 @@ async function importJson(file) {
     rerender();
   } catch (e) {
     toast(`Terugzetten mislukt: ${e.message}`);
+  }
+}
+
+// CSV export of waarneming.nl: new observations are added, changed ones updated, the rest left alone
+async function importWaarneming(file) {
+  if (!file) return;
+  try {
+    const { logs, unmatched } = waarnemingLogs(parseCsv(await file.text()), state.data.species);
+    const known = new Set(state.logs.map((l) => l.k));
+    let added = 0, updated = 0;
+    const newSpecies = new Set();
+    for (const log of logs) {
+      const old = state.logs.find((l) => l.id === log.id);
+      if (old?.modified === log.modified) continue;
+      await putLog(old ? { ...old, ...log } : log);
+      if (old) updated++;
+      else added++;
+      if (!known.has(log.k)) newSpecies.add(log.k);
+    }
+    await refreshLogs();
+    rerender();
+    const line = (n, one, many) => `${fmtNum(n)} ${n === 1 ? one : many}`;
+    openSheet(`
+      <header><h2>Import van waarneming.nl</h2><button class="close" aria-label="Sluiten">✕</button></header>
+      <p>${line(added, 'nieuwe waarneming', 'nieuwe waarnemingen')}, ${line(updated, 'bijgewerkt', 'bijgewerkt')}, ${fmtNum(logs.length - added - updated)} al aanwezig.</p>
+      ${newSpecies.size ? `<p>🎉 ${line(newSpecies.size, 'soort', 'soorten')} nieuw voor je lijst.</p>` : ''}
+      ${unmatched.length ? `<h3>Niet gevonden in de app (${unmatched.length})</h3>
+        <p class="hint">Deze soorten zitten niet in de soortenlijst van de app en zijn overgeslagen.</p>
+        <ul class="list">${unmatched.map((u) => `<li class="row"><span class="names"><b>${esc(u.name)}</b><i>${esc(u.latin)}</i></span>${u.url ? `<a href="${esc(u.url)}" target="_blank" rel="noopener">↗</a>` : ''}</li>`).join('')}</ul>` : ''}`);
+  } catch (e) {
+    toast(`Importeren mislukt: ${e.message}`);
   }
 }
 
@@ -613,7 +647,7 @@ function openSpecies(s) {
     ${logs.length ? `<h3>Mijn waarnemingen (${logs.length})</h3><ul class="list logs">${logs.map((l) => `
       <li class="row">
         ${l.photo ? `<img class="thumb big" data-photo="${l.id}" alt="">` : ''}
-        <span class="names"><b>${esc(fmtTime(l.t))}</b><small>${l.lat != null ? `${l.lat.toFixed(5)}, ${l.lon.toFixed(5)}` : 'geen locatie'} · ${esc(srcLabel(l.src))}</small>${l.note ? `<small>${esc(l.note)}</small>` : ''}</span>
+        <span class="names"><b>${esc(fmtTime(l.t))}</b><small>${l.lat != null ? `${l.lat.toFixed(5)}, ${l.lon.toFixed(5)}` : 'geen locatie'} · ${esc(srcLabel(l.src))}</small>${l.note ? `<small>${esc(l.note)}</small>` : ''}${l.url ? `<small><a href="${esc(l.url)}" target="_blank" rel="noopener">Bekijk op waarneming.nl ↗</a></small>` : ''}</span>
         <button class="del" data-edit="${l.id}" aria-label="Bewerken">✏️</button>
         <button class="del" data-del="${l.id}" aria-label="Verwijderen">🗑</button>
       </li>`).join('')}</ul>` : ''}`);
@@ -649,7 +683,7 @@ function seasonBar(s) {
     `<span class="${i === now ? 'now' : ''}"><i style="height:${Math.round((40 * v) / max)}px"></i><small>${'jfmamjjasond'[i]}</small></span>`).join('')}</div>`;
 }
 
-const srcLabel = (src) => ({ gps: 'GPS-locatie', foto: 'uit foto', kaart: 'gekozen op kaart' }[src] ?? 'onbekend');
+const srcLabel = (src) => ({ gps: 'GPS-locatie', foto: 'uit foto', kaart: 'gekozen op kaart', waarneming: 'van waarneming.nl' }[src] ?? 'onbekend');
 
 function getPosition() {
   return new Promise((resolve, reject) => {

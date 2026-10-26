@@ -12,6 +12,9 @@ hooiwagens en zweefvliegen.
 - **Soorten**: orde › familie › geslacht › soort, met zoeken op Nederlandse of Latijnse naam.
 - **Mijn lijst**: jaarlijst (aantal soorten en voortgang per groep per kalenderjaar, of alle jaren), je waarnemingen, export (CSV) en back-up/terugzetten.
   Bij het loggen meldt de app of een soort nieuw is voor je lijst of nieuw voor dat jaar.
+- **Importeer van waarneming.nl**: download op waarneming.nl je waarnemingen als CSV en kies dat bestand
+  in Mijn lijst. Elke waarneming krijgt een link naar het origineel (foto's blijven op waarneming.nl).
+  Je kunt steeds je hele export opnieuw importeren: bestaande waarnemingen worden bijgewerkt, niet verdubbeld.
 
 Loggen bewaart tijdstip en GPS-locatie (aanpasbaar op de kaart), optioneel met foto. Een waarneming kun je later bewerken (✏️ in het soortscherm).
 Kies je een foto met EXIF-gegevens, dan worden tijd en locatie uit de foto overgenomen.
