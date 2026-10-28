@@ -53,7 +53,15 @@ function inSeason(s, month = new Date().getMonth()) {
   if (!m) return true; // too few observations to tell
   return m[(month + 11) % 12] + m[month] + m[(month + 1) % 12] >= 10;
 }
-const seasonOn = (s) => !state.season || inSeason(s);
+// Worked out once per month: the map checks this for every species in every hok
+let seasonMonth = null;
+function updateSeason() {
+  const month = new Date().getMonth();
+  if (month === seasonMonth) return;
+  seasonMonth = month;
+  for (const s of state.data.species) s.ins = inSeason(s, month);
+}
+const seasonOn = (s) => !state.season || s.ins;
 
 // ---------------------------------------------------------------- startup
 async function start() {
@@ -92,6 +100,7 @@ function rerender() {
 const scrollPos = {};
 function showTab(tab) {
   if (!views[tab]) tab = 'common';
+  updateSeason(); // the app can stay open into the next month
   const again = tab === document.body.dataset.tab;
   if (document.body.dataset.tab) scrollPos[document.body.dataset.tab] = again ? 0 : scrollY;
   state.tab = tab;
@@ -335,8 +344,12 @@ function cellUnlogged(cell) {
   return out;
 }
 
+let drawnFor = null; // what the hokken were last drawn for; tab switches skip an unchanged redraw
 function drawCells() {
   const { grid } = state.data.meta;
+  const drawKey = [state.logs, [...state.groups].join(), state.season, hokKmNow(), seasonMonth];
+  if (drawnFor?.every((v, i) => v === drawKey[i])) return;
+  drawnFor = drawKey;
   cellLayer.clearLayers();
   logLayer.clearLayers();
   if (!gridCells.length) {
