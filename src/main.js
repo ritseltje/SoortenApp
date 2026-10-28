@@ -88,13 +88,18 @@ function rerender() {
   views[state.tab]();
 }
 
+// Each tab keeps its own scroll position; tapping the active tab again scrolls to the top
+const scrollPos = {};
 function showTab(tab) {
   if (!views[tab]) tab = 'common';
+  const again = tab === document.body.dataset.tab;
+  if (document.body.dataset.tab) scrollPos[document.body.dataset.tab] = again ? 0 : scrollY;
   state.tab = tab;
   save('tab', tab);
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
   document.body.dataset.tab = tab;
   views[tab]();
+  scrollTo(0, scrollPos[tab] ?? 0);
 }
 
 // ---------------------------------------------------------------- group filter
@@ -155,16 +160,21 @@ function renderCommon() {
 
 // Toggle between the national list and the list for the hokken around a location
 function scopeToggle() {
-  const month = new Date().toLocaleString('nl-NL', { month: 'long' });
   return `<div class="seg"><button data-scope="nl" class="${state.near ? '' : 'on'}">Heel Nederland</button><button data-scope="near" class="${state.near ? 'on' : ''}">In de buurt</button></div>
-    <label class="check"><input type="checkbox" data-act="season"${state.season ? ' checked' : ''}> Alleen soorten die je rond ${month} kunt vinden</label>`;
+    ${seasonCheck()}`;
+}
+
+// Season filter: one setting for Te zoeken and the map
+function seasonCheck() {
+  const month = new Date().toLocaleString('nl-NL', { month: 'long' });
+  return `<label class="check"><input type="checkbox" data-act="season"${state.season ? ' checked' : ''}> Alleen soorten die je rond ${month} kunt vinden</label>`;
 }
 
 function commonList(rows) {
   const shown = rows.slice(0, state.commonShown);
   return `<ul class="list">${shown.map(([s, n]) => speciesRow(s, `<span class="count">${fmtNum(n)}</span>`)).join('')}</ul>
     ${rows.length > shown.length ? `<button class="more">Meer tonen (${fmtNum(rows.length - shown.length)} over)</button>` : ''}
-    ${!rows.length ? '<p class="empty">Alles gelogd in deze groep(en)! 🎉</p>' : ''}`;
+    ${!rows.length ? `<p class="empty">${state.season ? 'Geen soorten meer die je nu kunt vinden. Zet het vinkje uit voor de rest.' : 'Alles gelogd in deze groep(en)! 🎉'}</p>` : ''}`;
 }
 
 function bindCommon() {
@@ -253,6 +263,11 @@ async function renderNear() {
 let map, cellLayer, logLayer, gridCells;
 async function renderMap() {
   const main = $('#main');
+  if (!gridCells) {
+    main.innerHTML = '<p class="empty">Kaart laden…</p>';
+    gridCells = await loadGrid();
+    if (state.tab !== 'map') return; // switched tabs while loading
+  }
   if (!map) {
     main.innerHTML = '<div id="map"></div><div id="map-legend"></div><div id="cell-panel" hidden></div>';
     map = L.map('map', { zoomControl: false, attributionControl: true }).setView([52.2, 5.3], 7);
@@ -273,7 +288,6 @@ async function renderMap() {
     new Locate({ position: 'topright' }).addTo(map);
     cellLayer = L.layerGroup().addTo(map);
     logLayer = L.layerGroup().addTo(map);
-    gridCells = await loadGrid();
   } else {
     // map element survives tab switches; re-attach it
     if (!main.contains($('#map'))) main.replaceChildren(...mapNodes);
@@ -316,7 +330,7 @@ function cellUnlogged(cell) {
   const out = [];
   for (let j = 0; j < cell.idx.length; j++) {
     const s = sp[cell.idx[j]];
-    if (s && groupOn(s) && !isLogged(s)) out.push([s, cell.cnt[j]]);
+    if (s && groupOn(s) && !isLogged(s) && seasonOn(s)) out.push([s, cell.cnt[j]]);
   }
   return out;
 }
@@ -360,7 +374,7 @@ function drawCells() {
   }
   const picker = sizes.length > 1 ? `<label>Hokken van <select>${sizes.map((s) =>
     `<option value="${s}"${s === km ? ' selected' : ''}>±${s}×${s} km</option>`).join('')}</select></label>` : '';
-  $('#map-legend').innerHTML = `${picker}
+  $('#map-legend').innerHTML = `${picker}${seasonCheck()}
     <span>Nog niet gelogde soorten per hok</span><span class="scale">${colors.map((c, i) =>
     `<i style="background:${c}"></i>${i < breaks.length ? `<small>${breaks[i]}</small>` : ''}`).join('')}</span>`;
   if (picker) $('#map-legend select').onchange = (e) => {
@@ -369,9 +383,19 @@ function drawCells() {
     $('#cell-panel').hidden = true;
     drawCells();
   };
+  $('#map-legend [data-act="season"]').onchange = (e) => {
+    state.season = e.target.checked;
+    save('season', state.season);
+    state.commonShown = 60;
+    drawCells();
+  };
+  // keep an open hok list in step with logs, groups and the season filter
+  if (openCell && !$('#cell-panel').hidden) showCell(...openCell);
 }
 
+let openCell = null; // [cell, lat, lon] shown in the hok panel
 function showCell(cell, lat, lon) {
+  openCell = [cell, lat, lon];
   const list = cellUnlogged(cell).sort((a, b) => b[1] - a[1]);
   const panel = $('#cell-panel');
   panel.hidden = false;
@@ -388,6 +412,7 @@ function showCell(cell, lat, lon) {
     save('near', true);
     setNearPos({ lat: lat + (k * grid.dLat) / 2, lon: lon + (k * grid.dLon) / 2, src: 'kaart' });
     panel.hidden = true;
+    scrollPos.common = 0;
     showTab('common');
   };
   bindRows(panel.querySelector('.list'));
