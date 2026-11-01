@@ -127,14 +127,14 @@ amfibieen: 27 in NSR, 24 recorded in NL
 atlas zoogdieren: 127 codes
 zoogdieren: 126 in NSR, 121 recorded in NL
 bijen: 408 in NSR, 377 recorded in NL
-  100/621
-  200/621
-  300/621
-  400/621
-  500/621
-  600/621
-kevers: 4630 in NSR, 4233 recorded in NL
-mieren: 209 in NSR, 120 recorded in NL
+  100/617
+  200/617
+  300/617
+  400/617
+  500/617
+  600/617
+kevers: 4630 in NSR, 4237 recorded in NL
+mieren: 209 in NSR, 121 recorded in NL
 spinnen: 704 in NSR, 633 recorded in NL
   100/1283
   200/1283
@@ -149,7 +149,7 @@ spinnen: 704 in NSR, 633 recorded in NL
   1100/1283
   1200/1283
 paddenstoelen: 3858 in NSR, 3233 recorded in NL
-wantsen: 1164 in NSR, 1105 recorded in NL
+wantsen: 1164 in NSR, 1109 recorded in NL
 sprinkhanen: 72 in NSR, 64 recorded in NL
 dagvlinders: 118 in NSR, 100 recorded in NL
 nachtvlinders: 888 in NSR, 840 recorded in NL
@@ -197,4 +197,4 @@ grid: 2912 cells
   2700/2912
   2800/2912
   2900/2912
-done: 16761 species, 2294 grid cells
+done: 16770 species, 2294 grid cells
